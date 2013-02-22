@@ -20,13 +20,15 @@ s.doWhenBooted({
 	thisProcess.openUDPPort(3333);
 	thisProcess.openUDPPort(4444);
 
-	rx = NetAddr ("localhost", nil);
-	tx = NetAddr ("localhost", 4444);
+	//rx = NetAddr ("localhost", nil);
+	//tx = NetAddr ("localhost", 4444);
+	rx = NetAddr ("chimaera", 3333);
+	tx = NetAddr ("chimaera", 4444);
 	chim = Chimaera(s, rx, tx);
-	chim.configure('/chimaera/version', {|version| ["version", version].postln;});
-	chim.configure('/chimaera/comm/mac', {|mac| ["MAC", mac].postln;});
-	chim.configure('/chimaera/output/enabled', true);
-	chim.configure('/chimaera/tuio/enabled', true);
+	//chim.configure('/chimaera/version', {|version| ["version", version].postln;});
+	//chim.configure('/chimaera/comm/mac', {|mac| ["MAC", mac].postln;});
+	//chim.configure('/chimaera/output/enabled', true);
+	//chim.configure('/chimaera/tuio/enabled', true);
 	//chim.configure('/chimaera/dump/enabled', true);
 
 	MIDIClient.init;
