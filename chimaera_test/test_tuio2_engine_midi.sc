@@ -36,11 +36,10 @@
 
 	chimconf.sendMsg("/chimaera/tuio/enabled", true); // enable Tuio output engine
 	chimconf.sendMsg("/chimaera/tuio/long_header", false); // use short Tuio frame header (default)
-	chimconf.sendMsg("/chimaera/tuio/version", 2); // use Tuio protocol version 2 (default)
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group/add", 1, ChimaeraConf.south, 0.0, 1.0); // add group
-	chimconf.sendMsg("/chimaera/group/add", 2, ChimaeraConf.north, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/add", 1, ChimaeraConf.north, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/add", 2, ChimaeraConf.south, 0.0, 1.0); // add group
 
 	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
 	rx = NetAddr ("chimaera.local", 3333);

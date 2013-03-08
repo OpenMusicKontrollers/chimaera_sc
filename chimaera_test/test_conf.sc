@@ -42,8 +42,8 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/comm/mac", {|mac| ("MAC address:" + mac).postln;}); // get MAC address of device
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group/add", 1, ChimaeraConf.south, 0.0, 1.0); // add a group
-	chimconf.sendMsg("/chimaera/group/add", 2, ChimaeraConf.north, 0.0, 1.0); // add another group
+	chimconf.sendMsg("/chimaera/group/add", 1, ChimaeraConf.north, 0.0, 1.0); // add a group
+	chimconf.sendMsg("/chimaera/group/add", 2, ChimaeraConf.south, 0.0, 1.0); // add another group
 
 	chimconf.sendMsg("/chimaera/config/save"); // save configuration to EEPROM
 })

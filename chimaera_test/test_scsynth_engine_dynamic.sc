@@ -57,6 +57,6 @@ s.doWhenBooted({
 	// id numbers on device will cycle linearly from offset to (offset+modulo) circularly
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group/add", 1, ChimaeraConf.south, 0.0, 1.0); // add group
-	chimconf.sendMsg("/chimaera/group/add", 2, ChimaeraConf.north, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/add", 1, ChimaeraConf.north, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/add", 2, ChimaeraConf.south, 0.0, 1.0); // add group
 })

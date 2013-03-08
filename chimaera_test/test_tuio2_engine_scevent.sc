@@ -40,23 +40,22 @@ s.doWhenBooted({
 
 	chimconf.sendMsg("/chimaera/tuio/enabled", true); // enable Tuio output engine
 	chimconf.sendMsg("/chimaera/tuio/long_header", false); // use short Tuio frame header (default)
-	chimconf.sendMsg("/chimaera/tuio/version", 2); // use Tuio protocol version 2 (default)
 
 	baseID = 1; // group 0 on chimaera device responds to everything and should not be overwritten
 	leadID = 2;
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group/add", baseID, ChimaeraConf.south, 0.0, 1.0); // add group
-	chimconf.sendMsg("/chimaera/group/add", leadID, ChimaeraConf.north, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/add", baseID, ChimaeraConf.north, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/add", leadID, ChimaeraConf.south, 0.0, 1.0); // add group
 
 	// create groups in sclang
 	instruments = Dictionary.new;
 	instruments[baseID] = \base;
-	instruments[leadID] = \treble;
+	instruments[leadID] = \lead;
 
 	// create groups in scsynth via events
 	(
-		type: \group
+		type: \group,
 		id: baseID,
 		group: 0 // as child of root group
 	).play;
@@ -68,24 +67,24 @@ s.doWhenBooted({
 	).play;
 
 	// definition of a low-pass filtered pulse width oscillator as base instrument
-	SynthDef(\base, {|freq=0, z=0, gate=1, out=0| // define our synth
+	SynthDef(\base, {|freq=0, amp=0, gate=1, out=0| // define our synth
 		var env, cut, sig;
 
 		env = EnvGen.kr(Env.asr(0.01, 1.0, 0.02, 1.0, -3), gate);
-		cut = LinLin.kr(z, 0, 1, 100, 400);
-		sig = Pulse.ar(freq, width0.5, mul:env*z);
-		sig = RLPF.ar(sig, cut);
+		cut = LinLin.kr(amp, 0, 1, 100, 1000);
+		sig = Pulse.ar(freq, mul:env*amp);
+		sig = RLPF.ar(sig, cut, 0.1);
 		sig = FreeVerb.ar(sig);
 		OffsetOut.ar(out, sig);
 	}).add;
 
 	// definition of a synced saw oscillator as lead instrument
-	SynthDef(\lead, {|freq=0, z=0, gate=1, out=0| // define our synth
+	SynthDef(\lead, {|freq=0, amp=0, gate=1, out=0| // define our synth
 		var env, freq2, sig;
 
 		env = EnvGen.kr(Env.asr(0.01, 1.0, 0.02, 1.0, -3), gate);
-		freq2 = LinExp.kr(z, 0, 1, 100, 400);
-		sig = SyncSaw.ar(freq, freq2, mul:env*z);
+		freq2 = LinExp.kr(amp, 0, 1, 100, 400);
+		sig = SyncSaw.ar(freq, freq2, mul:env*amp);
 		sig = FreeVerb.ar(sig);
 		OffsetOut.ar(out, sig);
 	}).add;
@@ -97,7 +96,7 @@ s.doWhenBooted({
 	chimtuio2.on = { |sid, tid, gid, x, z|
 		var id, midikey;
 
-		id = sid+1000%1000; // recycle synth ids between 1000-1999
+		id = sid%1000+1000; // recycle synth ids between 1000-1999
 		midikey = x*48+48;
 
 		( // send on event (sets gate=1)
@@ -107,14 +106,14 @@ s.doWhenBooted({
 			group: gid, // set group membership to group id
 			out: gid-1, // output channels start counting at 0, group ids at 1
 			midinote: midikey, // set frequency via midinote
-			z: z
+			amp: z,
 		).play;
 	};
 
 	chimtuio2.off = { |sid, tid, gid|
 		var id;
 
-		id = sid+1000%1000;
+		id = sid%1000+1000;
 
 		( // send off event (sets gate=0)
 			type: \off,
@@ -131,14 +130,14 @@ s.doWhenBooted({
 	chimtuio2.set = { |sid, tid, gid, x, z|
 		var id, midikey;
 
-		id = sid+1000%1000;
+		id = sid%1000+1000;
 		midikey = x*48+48;
 
 		( // send update event
 			type: \set,
 			id: id,
 			midinote: midikey,
-			z: z
+			amp: z
 		).play;
 	};
 })
