@@ -1,29 +1,41 @@
-Chimaera {
-	classvar <south, <north, <both;
-	var <>rx, <>tx, frm, tok, alv, reply, <>on, <>off, <>set, <>groupAddCb, old_blobs, new_blobs, cb;
+/*
+ * Copyright (c) 2012-2013 Hanspeter Portner (agenthp@users.sf.net)
+ * 
+ * This software is provided 'as-is', without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ * 
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ * 
+ *     1. The origin of this software must not be misrepresented; you must not
+ *     claim that you wrote the original software. If you use this software
+ *     in a product, an acknowledgment in the product documentation would be
+ *     appreciated but is not required.
+ * 
+ *     2. Altered source versions must be plainly marked as such, and must not be
+ *     misrepresented as being the original software.
+ * 
+ *     3. This notice may not be removed or altered from any source
+ *     distribution.
+ */
 
-	*new {|s, iRx, iTx|
-		^super.new.init(s, iRx, iTx);
+ChimaeraTuio2 {
+	var rx, frm, tok, alv, <>on, <>off, <>set, old_blobs, new_blobs;
+
+	*new {|s, iRx|
+		^super.new.init(s, iRx);
 	}
 
-	*initClass {
-		south = 0x80;
-		north = 0x100;
-		both = 0x180;
-	}
-
-	initConn {|iRx, iTx|
+	initConn {|iRx|
 		rx = iRx;
-		tx = iTx;
 		old_blobs = Dictionary.new;
 		new_blobs = Dictionary.new;
-		cb = Dictionary.new;
 
 		// handling tuio messages
 		frm = OSCFunc({|msg, time, addr, port|
 			var fid, timestamp;
-
-			//[msg, time, addr, port].postln;
 
 			fid = msg[1];
 			timestamp = msg[2];
@@ -31,8 +43,6 @@ Chimaera {
 
 		tok = OSCFunc({|msg, time, addr, port|
 			var sid, tuid, tid, gid, x, z;
-
-			//[msg, time, addr, port].postln;
 
 			sid = msg[1];
 			tuid = msg[2];
@@ -46,8 +56,6 @@ Chimaera {
 
 		alv = OSCFunc({|msg, time, addr, port|
 			var n;
-			
-			//[msg, time, addr, port].postln;
 
 			n = msg.size - 1;
 			if (msg[1] == 'N') {n = 0};
@@ -77,47 +85,12 @@ Chimaera {
 			new_blobs = Dictionary.new;
 		}, "/tuio2/alv", rx);
 
-		reply = OSCFunc({|msg, time, addr, port|
-			var id, status;
-			id = msg[1];
-			status = msg[2];
-			if(status) {
-				cb[id].value(msg[3]);
-			}
-			{ //else
-				"configure request failed".postln;
-			};
-			cb[id] = nil;
-		}, "/reply", tx);
-
 		on = nil;
 		off = nil;
 		set = nil;
-		groupAddCb = nil;
 	}
 
-	init {|s, iRx, iTx|
-		this.initConn(iRx, iTx);
-	}
-
-	groupAdd {|gid=0, pole=0x180, x0=0, x1=1|
-		tx.sendMsg('/chimaera/group/add', gid, pole, x0, x1);
-		if (groupAddCb.notNil)
-		{
-			groupAddCb.value(gid);
-		};
-	}
-
-	configure {|... args|
-		var path, callback;
-		path = args[0];
-		callback = args[args.size-1];
-		if(callback.isFunction) {
-			cb[13] = args[args.size-1];
-		}
-		{ // notFunction
-			cb[13] = true;
-		};
-		tx.sendMsg(args[0], 13, args[1]);
+	init {|s, iRx|
+		this.initConn(iRx);
 	}
 }
