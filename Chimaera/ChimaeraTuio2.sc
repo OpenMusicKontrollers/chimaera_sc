@@ -58,8 +58,6 @@ ChimaeraTuio2 {
 			var n;
 
 			n = msg.size - 1;
-			if (msg[1] == 'N') {n = 0};
-
 			if (n != new_blobs.size) {
 				n = new_blobs.size};
 

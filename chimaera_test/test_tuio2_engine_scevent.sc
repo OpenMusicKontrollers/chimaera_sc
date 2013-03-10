@@ -24,6 +24,7 @@
  */
 
 s.options.blockSize = 16;
+s.options.memSize = 65536;
 s.latency = nil;
 s.boot;
 
@@ -68,24 +69,27 @@ s.doWhenBooted({
 
 	// definition of a low-pass filtered pulse width oscillator as base instrument
 	SynthDef(\base, {|freq=0, amp=0, gate=1, out=0| // define our synth
-		var env, cut, sig;
+		var env, sig, cutoff;
 
 		env = EnvGen.kr(Env.asr(0.01, 1.0, 0.02, 1.0, -3), gate);
-		cut = LinLin.kr(amp, 0, 1, 100, 1000);
-		sig = Pulse.ar(freq, mul:env*amp);
-		sig = RLPF.ar(sig, cut, 0.1);
+		cutoff = LinExp.kr(amp, 0, 1, (2*12).midicps, (8*12).midicps);
+		sig = Pulse.ar([freq/2, freq, freq*2, freq*4], 0.2, mul:[0.5, 1, 0.5, 0.25]);
+		sig = Mix.ar(sig);
+		sig = RLPF.ar(sig, cutoff, 0.2, mul:env);
 		sig = FreeVerb.ar(sig);
 		OffsetOut.ar(out, sig);
 	}).add;
 
 	// definition of a synced saw oscillator as lead instrument
 	SynthDef(\lead, {|freq=0, amp=0, gate=1, out=0| // define our synth
-		var env, freq2, sig;
-
-		env = EnvGen.kr(Env.asr(0.01, 1.0, 0.02, 1.0, -3), gate);
-		freq2 = LinExp.kr(amp, 0, 1, 100, 400);
-		sig = SyncSaw.ar(freq, freq2, mul:env*amp);
-		sig = FreeVerb.ar(sig);
+		var env, sig, vol, cut;
+		vol = LinExp.kr(amp, 0.0, 1.0, 0.5, 1.0);
+		env = EnvGen.kr(Env.asr(0.01, 1.0, 10.0, 1.0, -3), gate);
+		sig = Pluck.ar(WhiteNoise.ar(0.1), gate, 1, freq.reciprocal, 10, 0.20);
+		sig = (sig*amp*1000).distort;
+		sig = FreeVerb.ar(sig, mix:0.8, room:0.5, damp:0.1, mul:vol*env);
+		cut = LinExp.kr(amp, 0.0, 1.0, 500, 1000);
+		sig = RLPF.ar(sig, freq:cut, rq:0.3);
 		OffsetOut.ar(out, sig);
 	}).add;
 
@@ -123,7 +127,7 @@ s.doWhenBooted({
 		( // send delayed kill event
 			type: \kill,
 			id: id,
-			delay: 2
+			lag: 2
 		).play;
 	};
 
