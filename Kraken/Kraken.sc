@@ -1,9 +1,9 @@
 Kraken {
 	classvar last, fid;
-	var rx, tx;
+	var listen, tx;
 
-	*new {|s|
-		^super.new.init(s);
+	*new {|s, iTx|
+		^super.new.init(s, iTx);
 	}
 
 	*initClass {
@@ -11,11 +11,10 @@ Kraken {
 		fid = Array.fill(8, 1);
 	}
 
-	init {|s, host="127.0.0.1", port=1212|
+	init {|s, iTx|
+		tx = iTx;
 
-		tx = NetAddr(host, port);
-
-		rx = OSCresponder(nil, '/kraken', {|time, obj, msg, addr|
+		listen = OSCFunc({|msg, time, addr, port|
 			var channel, value;
 			channel = msg[2];
 			value = msg[3];
@@ -26,7 +25,7 @@ Kraken {
 				fid[channel] = fid[channel] + 1;
 				last[channel] = value;
 			}
-		}).add;
+		}, "/kraken", nil);
 	}
 
 	ar {|channel=0, in, rate=2000|

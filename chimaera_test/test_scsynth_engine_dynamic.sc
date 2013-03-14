@@ -23,26 +23,17 @@
  *     distribution.
  */
 
+Server.supernova;
 s.options.blockSize = 16;
+s.options.memSize = 65536;
 s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var inst, txrx, chimconf;
-
-	inst = SynthDef(\myinstrument, {|x, z, gate|
-		var base, freq, sig;
-
-		base = 24+12;
-		freq = LinExp.kr(x, 0, 1, base.midicps, (base+48).midicps);	
-		sig = SinOsc.ar(freq, mul:gate*z);
-
-		OffsetOut.ar([0,1], sig);
-	}).add;
+	var inst, txrx, chimconf, instruments, baseID, leadID;
 
 	thisProcess.openUDPPort(4444);
 	txrx = NetAddr ("chimaera.local", 4444);
-	txrx.postln;
 
 	chimconf = ChimaeraConf(s, txrx, txrx);
 
@@ -50,13 +41,18 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/output/address", "192.168.1.10:57110"); // send to scsynth port
 
 	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
-	chimconf.sendMsg("/chimaera/scsynth/instrument", \myinstrument); // set scsynth instrument name
+	chimconf.sendMsg("/chimaera/scsynth/instrument", \lead); // set scsynth instrument name
 	chimconf.sendMsg("/chimaera/scsynth/prealloc", false); // use dynamic mode of scsynth output engine
 	chimconf.sendMsg("/chimaera/scsynth/offset", 1000); // offset of new synthdef ids
-	chimconf.sendMsg("/chimaera/scsynth/modulo", 1000); // modulo of new synthdef ids
+	chimconf.sendMsg("/chimaera/scsynth/modulo", 8000); // modulo of new synthdef ids
 	// id numbers on device will cycle linearly from offset to (offset+modulo) circularly
 
+	baseID = 0; // group 0 on chimaera device responds to everything and should not be overwritten
+	leadID = 1;
+
+	"./common.sc".load.value(baseID, leadID);
+
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group/add", 1, ChimaeraConf.north, 0.0, 1.0); // add group
-	chimconf.sendMsg("/chimaera/group/add", 2, ChimaeraConf.south, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", baseID, \base, ChimaeraConf.north, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", leadID, \lead, ChimaeraConf.south, 0.0, 1.0); // add group
 })

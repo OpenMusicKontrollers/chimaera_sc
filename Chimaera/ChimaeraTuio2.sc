@@ -42,17 +42,17 @@ ChimaeraTuio2 {
 		}, "/tuio2/frm", rx);
 
 		tok = OSCFunc({|msg, time, addr, port|
-			var sid, tuid, tid, gid, x, z;
+			var sid, pid, gid, x, z, a;
 
 			sid = msg[1];
-			tuid = msg[2];
-			tid = tuid >> 16;
-			gid = tuid & 0xffff;
-			x = msg[3];
-			z = msg[4];
+			pid = msg[2] & 0xffff;
+			gid = msg[3];
+			x = msg[4];
+			z = msg[5];
+			//a = msg[6]; // not used
 
-			new_blobs[sid] = [sid, tid, gid, x, z];
-		}, "/tuio2/_STxz", rx);
+			new_blobs[sid] = [sid, pid, gid, x, z];
+		}, "/tuio2/tok", rx);
 
 		alv = OSCFunc({|msg, time, addr, port|
 			var n;

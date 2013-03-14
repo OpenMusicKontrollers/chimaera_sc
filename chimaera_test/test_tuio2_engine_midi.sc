@@ -24,7 +24,7 @@
  */
 
 {
-	var rx, tx, chimconf, chimtuio2, midio, lookup;
+	var rx, tx, chimconf, chimtuio2, midio, lookup, baseID, leadID;
 
 	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
 	tx = NetAddr ("chimaera.local", 4444);
@@ -37,9 +37,12 @@
 	chimconf.sendMsg("/chimaera/tuio/enabled", true); // enable Tuio output engine
 	chimconf.sendMsg("/chimaera/tuio/long_header", false); // use short Tuio frame header (default)
 
+	baseID = 0; // group 0 on chimaera device responds to everything and should not be overwritten
+	leadID = 1;
+
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group/add", 1, ChimaeraConf.north, 0.0, 1.0); // add group
-	chimconf.sendMsg("/chimaera/group/add", 2, ChimaeraConf.south, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", baseID, \base, ChimaeraConf.north, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", leadID, \lead, ChimaeraConf.south, 0.0, 1.0); // add group
 
 	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
 	rx = NetAddr ("chimaera.local", 3333);
@@ -52,7 +55,7 @@
 
 	lookup = Dictionary.new; // lookup table of currently active keys
 
-	chimtuio2.on = { |sid, tid, gid, x, z| // set callback function for blob on-events
+	chimtuio2.on = { |sid, pid, gid, x, z| // set callback function for blob on-events
 		var midikey = x*48+48;
 
 		lookup[sid] = midikey.round;
@@ -61,12 +64,12 @@
 		midio.control(gid, 0x4a, z*0x7f); // sound controller #5, change this to volume, modulation, after-touch, ...
 	};
 
-	chimtuio2.off = { |sid, tid, gid| // set callback function for blob off-events
+	chimtuio2.off = { |sid, pid, gid| // set callback function for blob off-events
 		midio.noteOff(gid, lookup[sid], 0x00);
 		lookup[sid] = nil;
 	};
 
-	chimtuio2.set = { |sid, tid, gid, x, z| // set callback function for blob set-events
+	chimtuio2.set = { |sid, pid, gid, x, z| // set callback function for blob set-events
 		var midikey = x*48+48;
 
 		midio.bend(gid, midikey-lookup[sid]/48*0x2000+0x2000);

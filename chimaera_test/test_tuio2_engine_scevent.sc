@@ -42,62 +42,25 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/tuio/enabled", true); // enable Tuio output engine
 	chimconf.sendMsg("/chimaera/tuio/long_header", false); // use short Tuio frame header (default)
 
-	baseID = 1; // group 0 on chimaera device responds to everything and should not be overwritten
-	leadID = 2;
+	baseID = 0; // group 0 on chimaera device responds to everything and should not be overwritten
+	leadID = 1;
 
-	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group/add", baseID, ChimaeraConf.north, 0.0, 1.0); // add group
-	chimconf.sendMsg("/chimaera/group/add", leadID, ChimaeraConf.south, 0.0, 1.0); // add group
+	"./common.sc".load.value(baseID, leadID);
 
 	// create groups in sclang
 	instruments = Dictionary.new;
 	instruments[baseID] = \base;
 	instruments[leadID] = \lead;
 
-	// create groups in scsynth via events
-	(
-		type: \group,
-		id: baseID,
-		group: 0 // as child of root group
-	).play;
-
-	(
-		type: \group,
-		id: leadID,
-		group: 0 // as child of root group
-	).play;
-
-	// definition of a low-pass filtered pulse width oscillator as base instrument
-	SynthDef(\base, {|freq=0, amp=0, gate=1, out=0| // define our synth
-		var env, sig, cutoff;
-
-		env = EnvGen.kr(Env.asr(0.01, 1.0, 0.02, 1.0, -3), gate);
-		cutoff = LinExp.kr(amp, 0, 1, (2*12).midicps, (8*12).midicps);
-		sig = Pulse.ar([freq/2, freq, freq*2, freq*4], 0.2, mul:[0.5, 1, 0.5, 0.25]);
-		sig = Mix.ar(sig);
-		sig = RLPF.ar(sig, cutoff, 0.2, mul:env);
-		sig = FreeVerb.ar(sig);
-		OffsetOut.ar(out, sig);
-	}).add;
-
-	// definition of a synced saw oscillator as lead instrument
-	SynthDef(\lead, {|freq=0, amp=0, gate=1, out=0| // define our synth
-		var env, sig, vol, cut;
-		vol = LinExp.kr(amp, 0.0, 1.0, 0.5, 1.0);
-		env = EnvGen.kr(Env.asr(0.01, 1.0, 10.0, 1.0, -3), gate);
-		sig = Pluck.ar(WhiteNoise.ar(0.1), gate, 1, freq.reciprocal, 10, 0.20);
-		sig = (sig*amp*1000).distort;
-		sig = FreeVerb.ar(sig, mix:0.8, room:0.5, damp:0.1, mul:vol*env);
-		cut = LinExp.kr(amp, 0.0, 1.0, 500, 1000);
-		sig = RLPF.ar(sig, freq:cut, rq:0.3);
-		OffsetOut.ar(out, sig);
-	}).add;
+	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
+	chimconf.sendMsg("/chimaera/group/set", baseID, \base, ChimaeraConf.north, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", leadID, \lead, ChimaeraConf.south, 0.0, 1.0); // add group
 
 	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
 	rx = NetAddr ("chimaera.local", 3333);
 	chimtuio2 = ChimaeraTuio2(s, rx);
 
-	chimtuio2.on = { |sid, tid, gid, x, z|
+	chimtuio2.on = { |sid, pid, gid, x, z|
 		var id, midikey;
 
 		id = sid%1000+1000; // recycle synth ids between 1000-1999
@@ -105,16 +68,17 @@ s.doWhenBooted({
 
 		( // send on event (sets gate=1)
 			type: \on,
+			addAction: \addToHead,
 			instrument: instruments[gid], // choose instrument according to group id
 			id: id,
 			group: gid, // set group membership to group id
-			out: gid-1, // output channels start counting at 0, group ids at 1
+			out: gid, // output channels start counting at 0, group ids at 1
 			midinote: midikey, // set frequency via midinote
 			amp: z,
 		).play;
 	};
 
-	chimtuio2.off = { |sid, tid, gid|
+	chimtuio2.off = { |sid, pid, gid|
 		var id;
 
 		id = sid%1000+1000;
@@ -131,11 +95,11 @@ s.doWhenBooted({
 		).play;
 	};
 
-	chimtuio2.set = { |sid, tid, gid, x, z|
+	chimtuio2.set = { |sid, pid, gid, x, z|
 		var id, midikey;
 
 		id = sid%1000+1000;
-		midikey = x*48+48;
+		midikey = x*48+36;
 
 		( // send update event
 			type: \set,
