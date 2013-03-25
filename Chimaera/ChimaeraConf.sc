@@ -43,13 +43,10 @@ ChimaeraConf {
 
 		success = OSCFunc({|msg, time, addr, port|
 			var id;
-			
+		
 			msg.removeAt(0); // path
 			id = msg.removeAt(0);
-			if (cb[id].isFunction) {
-				cb[id].value(msg);
-			};
-			cb[id] = nil;
+			this.success(id, msg);
 		}, "/success", rx);
 
 		fail = OSCFunc({|msg, time, addr, port|
@@ -57,13 +54,26 @@ ChimaeraConf {
 
 			msg.removeAt(0); // path
 			id = msg.removeAt(0);
-			["ChimaeraConf: configure request failed", msg].postln;
-			cb[id] = nil;
+			this.fail(id, msg);
 		}, "/fail", rx);
 	}
 
 	init {|s, iTx, iRx|
 		this.initConn(iTx, iRx);
+	}
+
+	success {|id, msg|
+		if (cb[id].isFunction) {
+			cb[id].value(msg);
+		};
+		cb[id] = nil;
+	}
+
+	fail {|id, msg|
+		if (cb[id].notNil) {
+			("ChimaeraConf request failed:" + msg[0]).postln;
+			cb[id] = nil;
+		};
 	}
 
 	sendMsg {|... args|
@@ -77,6 +87,12 @@ ChimaeraConf {
 		};
 		cb[count] = callback;
 		tx.performList(\sendMsg, path, count, args);
+
+		// send timeout to ourselfs
+		SystemClock.sched(1, {
+			this.fail(count, ["timeout"])
+		});
+
 		count = count + 1;
 	}
 }

@@ -47,7 +47,7 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/scsynth/modulo", 8000); // modulo of new synthdef ids
 	// id numbers on device will cycle linearly from offset to (offset+modulo) circularly
 
-	baseID = 0; // group 0 on chimaera device responds to everything and should not be overwritten
+	baseID = 0;
 	leadID = 1;
 
 	"./common.sc".load.value(baseID, leadID);

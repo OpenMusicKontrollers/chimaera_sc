@@ -42,7 +42,7 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/tuio/enabled", true); // enable Tuio output engine
 	chimconf.sendMsg("/chimaera/tuio/long_header", false); // use short Tuio frame header (default)
 
-	baseID = 0; // group 0 on chimaera device responds to everything and should not be overwritten
+	baseID = 0;
 	leadID = 1;
 
 	"./common.sc".load.value(baseID, leadID);
@@ -61,10 +61,9 @@ s.doWhenBooted({
 	chimtuio2 = ChimaeraTuio2(s, rx);
 
 	chimtuio2.on = { |sid, pid, gid, x, z|
-		var id, midikey;
+		var id;
 
 		id = sid%1000+1000; // recycle synth ids between 1000-1999
-		midikey = x*48+48;
 
 		( // send on event (sets gate=1)
 			type: \on,
@@ -73,7 +72,7 @@ s.doWhenBooted({
 			id: id,
 			group: gid, // set group membership to group id
 			out: gid, // output channels start counting at 0, group ids at 1
-			midinote: midikey, // set frequency via midinote
+			freq: x,
 			amp: z,
 		).play;
 	};
@@ -96,15 +95,14 @@ s.doWhenBooted({
 	};
 
 	chimtuio2.set = { |sid, pid, gid, x, z|
-		var id, midikey;
+		var id;
 
 		id = sid%1000+1000;
-		midikey = x*48+36;
 
 		( // send update event
 			type: \set,
 			id: id,
-			midinote: midikey,
+			freq: x,
 			amp: z
 		).play;
 	};
