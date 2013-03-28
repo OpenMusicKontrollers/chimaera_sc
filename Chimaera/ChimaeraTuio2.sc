@@ -51,7 +51,7 @@ ChimaeraTuio2 {
 			z = msg[5];
 			//a = msg[6]; // not used
 
-			new_blobs[sid] = [sid, pid, gid, x, z];
+			new_blobs[sid] = [time, sid, pid, gid, x, z];
 		}, "/tuio2/tok", rx);
 
 		alv = OSCFunc({|msg, time, addr, port|
@@ -63,19 +63,19 @@ ChimaeraTuio2 {
 
 			// search for disappeard blobs
 			old_blobs do: {|v|
-				if (new_blobs[v[0]].isNil)
+				if (new_blobs[v[1]].isNil)
 				{
-					if(off.notNil) {off.value (v[0], v[1], v[2])};
+					if(off.notNil) {off.value (v[0], v[1], v[2], v[3])};
 				};
 			};
 
 			// search for new blobs
 			new_blobs do: {|v|
-				if (old_blobs[v[0]].isNil) {
-					if(on.notNil) {on.value (v[0], v[1], v[2], v[3], v[4])};
+				if (old_blobs[v[1]].isNil) {
+					if(on.notNil) {on.value (v[0], v[1], v[2], v[3], v[4], v[5])};
 				}
 				{	
-					if(set.notNil) {set.value (v[0], v[1], v[2], v[3], v[4])};
+					if(set.notNil) {set.value (v[0], v[1], v[2], v[3], v[4], v[5])};
 				};
 			};
 

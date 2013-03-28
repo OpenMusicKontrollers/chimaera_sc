@@ -56,6 +56,7 @@ s.doWhenBooted({
 
 	chimconf.sendMsg("/chimaera/output/enabled", true); // enable output
 	chimconf.sendMsg("/chimaera/output/address", "192.168.1.10:57110"); // send to scsynth port
+	chimconf.sendMsg("/chimaera/output/offset", 0.001); // add 1ms offset to bundle timestamps
 
 	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
 	chimconf.sendMsg("/chimaera/scsynth/prealloc", true); // use prealloc mode of scsynth output engine

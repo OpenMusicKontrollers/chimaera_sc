@@ -33,6 +33,7 @@
 
 	chimconf.sendMsg("/chimaera/output/enabled", true); // enable output
 	chimconf.sendMsg("/chimaera/output/address", "192.168.1.10:3333"); // send output stream to port 3333
+	chimconf.sendMsg("/chimaera/output/offset", 0.001); // add 1ms offset to bundle timestamps
 
 	chimconf.sendMsg("/chimaera/tuio/enabled", true); // enable Tuio output engine
 	chimconf.sendMsg("/chimaera/tuio/long_header", false); // use short Tuio frame header (default)
@@ -55,7 +56,7 @@
 
 	lookup = Dictionary.new; // lookup table of currently active keys
 
-	chimtuio2.on = { |sid, pid, gid, x, z| // set callback function for blob on-events
+	chimtuio2.on = { |time, sid, pid, gid, x, z| // set callback function for blob on-events
 		var midikey = x*48+48;
 
 		lookup[sid] = midikey.round;
@@ -64,12 +65,12 @@
 		midio.control(gid, 0x4a, z*0x7f); // sound controller #5, change this to volume, modulation, after-touch, ...
 	};
 
-	chimtuio2.off = { |sid, pid, gid| // set callback function for blob off-events
+	chimtuio2.off = { |time, sid, pid, gid| // set callback function for blob off-events
 		midio.noteOff(gid, lookup[sid], 0x00);
 		lookup[sid] = nil;
 	};
 
-	chimtuio2.set = { |sid, pid, gid, x, z| // set callback function for blob set-events
+	chimtuio2.set = { |time, sid, pid, gid, x, z| // set callback function for blob set-events
 		var midikey = x*48+48;
 
 		midio.bend(gid, midikey-lookup[sid]/48*0x2000+0x2000);

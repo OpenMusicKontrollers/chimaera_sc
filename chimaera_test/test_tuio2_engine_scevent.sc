@@ -38,6 +38,7 @@ s.doWhenBooted({
 
 	chimconf.sendMsg("/chimaera/output/enabled", true); // enable output
 	chimconf.sendMsg("/chimaera/output/address", "192.168.1.10:3333"); // send output stream to port 3333
+	chimconf.sendMsg("/chimaera/output/offset", 0.002); // add 1ms offset to bundle timestamps
 
 	chimconf.sendMsg("/chimaera/tuio/enabled", true); // enable Tuio output engine
 	chimconf.sendMsg("/chimaera/tuio/long_header", false); // use short Tuio frame header (default)
@@ -60,10 +61,11 @@ s.doWhenBooted({
 	rx = NetAddr ("chimaera.local", 3333);
 	chimtuio2 = ChimaeraTuio2(s, rx);
 
-	chimtuio2.on = { |sid, pid, gid, x, z|
-		var id;
+	chimtuio2.on = { |time, sid, pid, gid, x, z|
+		var id, lag;
 
 		id = sid%1000+1000; // recycle synth ids between 1000-1999
+		lag = time - SystemClock.beats;	
 
 		( // send on event (sets gate=1)
 			type: \on,
@@ -71,39 +73,44 @@ s.doWhenBooted({
 			instrument: instruments[gid], // choose instrument according to group id
 			id: id,
 			group: gid, // set group membership to group id
-			out: gid, // output channels start counting at 0, group ids at 1
+			out: gid, // output channels start counting at 0
 			freq: x,
 			amp: z,
+			lag: lag
 		).play;
 	};
 
-	chimtuio2.off = { |sid, pid, gid|
-		var id;
+	chimtuio2.off = { |time, sid, pid, gid|
+		var id, lag;
 
 		id = sid%1000+1000;
+		lag = time - SystemClock.beats;	
 
 		( // send off event (sets gate=0)
 			type: \off,
 			id: id,
+			lag: lag
 		).play;
 
 		( // send delayed kill event
 			type: \kill,
 			id: id,
-			lag: 2
+			lag: lag+2
 		).play;
 	};
 
-	chimtuio2.set = { |sid, pid, gid, x, z|
-		var id;
+	chimtuio2.set = { |time, sid, pid, gid, x, z|
+		var id, lag;
 
 		id = sid%1000+1000;
+		lag = time - SystemClock.beats;	
 
 		( // send update event
 			type: \set,
 			id: id,
 			freq: x,
-			amp: z
+			amp: z,
+			lag: lag
 		).play;
 	};
 })

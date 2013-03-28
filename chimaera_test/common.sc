@@ -19,6 +19,7 @@
 		var env, sig, cutoff;
 
 		freq = LinExp.kr(freq, 0, 1, (3*12-0.5).midicps, (7*12).midicps);
+		amp = Median.kr(31, amp);
 
 		env = EnvGen.kr(Env.asr(0.01, 1.0, 0.02, 1.0, -3), gate);
 		cutoff = LinExp.kr(amp, 0, 1, (1*12).midicps, (7*12).midicps);
@@ -34,6 +35,7 @@
 		var env, sig, vol, cut;
 
 		freq = LinExp.kr(freq, 0, 1, (3*12-0.5).midicps, (7*12).midicps);
+		amp = Median.kr(31, amp);
 
 		vol = LinExp.kr(amp, 0.0, 1.0, 0.5, 1.0);
 		env = EnvGen.kr(Env.asr(0.01, 1.0, 10.0, 1.0, -3), gate);
