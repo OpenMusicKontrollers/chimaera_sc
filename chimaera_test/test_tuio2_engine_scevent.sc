@@ -23,8 +23,8 @@
  *     distribution.
  */
 
-s.options.blockSize = 16;
-s.options.memSize = 65536;
+s.options.blockSize = 0x10;
+s.options.memSize = 0x10000;
 s.latency = nil;
 s.boot;
 
@@ -46,7 +46,9 @@ s.doWhenBooted({
 	baseID = 0;
 	leadID = 1;
 
-	"./common.sc".load.value(baseID, leadID);
+	"../templates/two_groups.sc".load.value(baseID, leadID);
+	"../instruments/analog.sc".load.value(\base);
+	"../instruments/syncsaw.sc".load.value(\lead);
 
 	// create groups in sclang
 	instruments = Dictionary.new;
@@ -64,8 +66,10 @@ s.doWhenBooted({
 	chimtuio2.on = { |time, sid, pid, gid, x, z|
 		var id, lag;
 
-		id = sid%1000+1000; // recycle synth ids between 1000-1999
+		id = sid+1000; // recycle synth ids between 1000-1999
 		lag = time - SystemClock.beats;	
+
+		//["on", sid].postln;
 
 		( // send on event (sets gate=1)
 			type: \on,
@@ -83,8 +87,10 @@ s.doWhenBooted({
 	chimtuio2.off = { |time, sid, pid, gid|
 		var id, lag;
 
-		id = sid%1000+1000;
+		id = sid+1000;
 		lag = time - SystemClock.beats;	
+
+		//["off", sid].postln;
 
 		( // send off event (sets gate=0)
 			type: \off,
@@ -95,14 +101,14 @@ s.doWhenBooted({
 		( // send delayed kill event
 			type: \kill,
 			id: id,
-			lag: lag+2
+			lag: lag+1
 		).play;
 	};
 
 	chimtuio2.set = { |time, sid, pid, gid, x, z|
 		var id, lag;
 
-		id = sid%1000+1000;
+		id = sid+1000;
 		lag = time - SystemClock.beats;	
 
 		( // send update event

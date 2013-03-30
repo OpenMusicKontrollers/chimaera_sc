@@ -38,7 +38,7 @@
 	chimconf.sendMsg("/chimaera/tuio/enabled", true); // enable Tuio output engine
 	chimconf.sendMsg("/chimaera/tuio/long_header", false); // use short Tuio frame header (default)
 
-	baseID = 0; // group 0 on chimaera device responds to everything and should not be overwritten
+	baseID = 0;
 	leadID = 1;
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups

@@ -30,10 +30,13 @@ s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var inst, txrx, chimconf, instruments, baseID, leadID;
+	var inst, txrx, chimconf, instruments, baseID, leadID, stompotto, baseInst, leadInst;
 
+	/*
+	 * Chimaera
+	 */
 	thisProcess.openUDPPort(4444);
-	txrx = NetAddr ("chimaera.local", 4444);
+	txrx = NetAddr("chimaera.local", 4444);
 
 	chimconf = ChimaeraConf(s, txrx, txrx);
 
@@ -51,6 +54,20 @@ s.doWhenBooted({
 	baseID = 0;
 	leadID = 1;
 
+	baseInst = [
+		"sine",
+		"analog",
+		"syncsaw",
+		"pluck"
+	];
+
+	leadInst = [
+		"grain",
+		"analog",
+		"syncsaw",
+		"pluck"
+	];
+
 	"../templates/two_groups.sc".load.value(baseID, leadID);
 	"../instruments/analog.sc".load.value(\base);
 	"../instruments/syncsaw.sc".load.value(\lead);
@@ -58,4 +75,24 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
 	chimconf.sendMsg("/chimaera/group/set", baseID, \base, ChimaeraConf.north, 0.0, 1.0); // add group
 	chimconf.sendMsg("/chimaera/group/set", leadID, \lead, ChimaeraConf.south, 0.0, 1.0); // add group
+
+	/*
+	 * StompOtto
+	 */
+	thisProcess.openUDPPort(9999);
+	stompotto = StompOtto(s, NetAddr("localhost", nil));
+
+	stompotto.on = {|id| // set callback function for on-events
+		["on", id].postln;
+
+		if (id < 4) {
+			("../instruments/"++baseInst[id]++".sc").load.value(\base);
+		} {
+			("../instruments/"++leadInst[id-4]++".sc").load.value(\lead);
+		}
+	};
+
+	stompotto.off = {|id| // set callback function for off-events
+		["off", id].postln;
+	};
 })

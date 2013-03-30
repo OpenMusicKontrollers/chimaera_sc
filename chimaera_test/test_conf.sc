@@ -23,7 +23,8 @@
  *     distribution.
  */
 
-s.options.blockSize = 16;
+s.options.blockSize = 0x10;
+s.options.memSize = 0x10000;
 s.latency = nil;
 s.boot;
 
