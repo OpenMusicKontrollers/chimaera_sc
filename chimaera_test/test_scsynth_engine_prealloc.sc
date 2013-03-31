@@ -29,29 +29,10 @@ s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var inst, ev, txrx, chimconf;
-
-	inst = SynthDef(\myinstrument, {|x, z, gate|
-		var base, freq, sig;
-
-		base = 24+12;
-		freq = LinExp.kr(x, 0, 1, base.midicps, (base+48).midicps);	
-		sig = SinOsc.ar(freq, mul:gate*z);
-
-		OffsetOut.ar([0,1], sig);
-	}).add;
-
-	// preallocate 8 synths
-	ev = (
-		type: \on,
-		instrument: \myinstrument,
-		id: [1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007],
-		gate: 0
-	).play;
+	var inst, txrx, chimconf, baseID, leadID;
 
 	thisProcess.openUDPPort(4444);
 	txrx = NetAddr ("chimaera.local", 4444);
-	txrx.postln;
 
 	chimconf = ChimaeraConf(s, txrx, txrx);
 
@@ -61,10 +42,51 @@ s.doWhenBooted({
 
 	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
 	chimconf.sendMsg("/chimaera/scsynth/prealloc", true); // use prealloc mode of scsynth output engine
-	chimconf.sendMsg("/chimaera/scsynth/offset", 1000); // offset of preallocated scsynth ids
-	chimconf.sendMsg("/chimaera/scsynth/modulo", 8); // number of preallocated scsynth ids to cycle through
+	chimconf.sendMsg("/chimaera/scsynth/offset", 2000); // offset of preallocated scsynth ids
+	chimconf.sendMsg("/chimaera/scsynth/modulo", 4); // number of preallocated scsynth ids to cycle through
+
+	baseID = 0;
+	leadID = 1;
+
+	"../templates/two_groups.sc".load.value(baseID, leadID);
+	"../instruments/analog.sc".load.value(\base);
+	"../instruments/syncsaw.sc".load.value(\lead);
+
+	//TODO remove me
+	SynthDef(\base, {|freq, amp, p, gate=0, out=0|
+		freq = LinExp.kr(freq, 0, 1, 48.midicps, 96.midicps);
+		OffsetOut.ar(out, SinOsc.ar(freq, mul:gate*amp));
+	}).add;
+
+	SynthDef(\lead, {|freq, amp, p, gate=0, out=0|
+		freq = LinExp.kr(freq, 0, 1, 48.midicps, 96.midicps);
+		OffsetOut.ar(out, SinOsc.ar(freq, mul:gate*amp));
+	}).add;
+
+	1.wait;
+
+	// preallocate 4 synths per group
+	(
+		type: \on,
+		addAction: \addToHead,
+		instrument: \base,
+		id: [2000, 2001, 2002, 2003],
+		group: baseID,
+		out: baseID,
+		gate: 0
+	).play;
+
+	(
+		type: \on,
+		addAction: \addToHead,
+		instrument: \lead,
+		id: [2004, 2005, 2006, 2007],
+		group: leadID,
+		out: leadID,
+		gate: 0
+	).play;
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group/add", 1, ChimaeraConf.north, 0.0, 1.0); // add group
-	chimconf.sendMsg("/chimaera/group/add", 2, ChimaeraConf.south, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", baseID, \base, ChimaeraConf.north, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", leadID, \lead, ChimaeraConf.south, 0.0, 1.0); // add group
 })
