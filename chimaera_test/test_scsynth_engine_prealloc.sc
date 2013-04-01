@@ -49,19 +49,8 @@ s.doWhenBooted({
 	leadID = 1;
 
 	"../templates/two_groups.sc".load.value(baseID, leadID);
-	"../instruments/analog.sc".load.value(\base);
-	"../instruments/syncsaw.sc".load.value(\lead);
-
-	//TODO remove me
-	SynthDef(\base, {|freq, amp, p, gate=0, out=0|
-		freq = LinExp.kr(freq, 0, 1, 48.midicps, 96.midicps);
-		OffsetOut.ar(out, SinOsc.ar(freq, mul:gate*amp));
-	}).add;
-
-	SynthDef(\lead, {|freq, amp, p, gate=0, out=0|
-		freq = LinExp.kr(freq, 0, 1, 48.midicps, 96.midicps);
-		OffsetOut.ar(out, SinOsc.ar(freq, mul:gate*amp));
-	}).add;
+	"../instruments/sine.sc".load.value(\base);
+	"../instruments/sine.sc".load.value(\lead);
 
 	1.wait;
 

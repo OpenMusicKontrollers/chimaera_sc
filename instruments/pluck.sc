@@ -33,7 +33,7 @@
 	SynthDef(synthname, {|freq=0, amp=0, p=0, gate=1, out=0|
 		var env, sig, vol, cut;
 
-		freq = LinExp.kr(freq, 0, 1, (3*12-0.5).midicps, (7*12).midicps);
+		freq = LinExp.kr(freq, 0, 1, (3*12-0.5).midicps, (7*12+0.5).midicps);
 
 		vol = LinExp.kr(amp, 0.0, 1.0, 0.5, 1.0);
 		env = EnvGen.kr(Env.asr(0.01, 1.0, 10.0, 1.0, -3), gate);
