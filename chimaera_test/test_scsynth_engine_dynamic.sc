@@ -52,8 +52,8 @@ s.doWhenBooted({
 	leadID = 1;
 
 	"../templates/two_groups.sc".load.value(baseID, leadID);
-	"../instruments/analog.sc".load.value(\base);
-	"../instruments/syncsaw.sc".load.value(\lead);
+	"../instruments/blip.sc".load.value(\base);
+	"../instruments/blip.sc".load.value(\lead);
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
 	chimconf.sendMsg("/chimaera/group/set", baseID, \base, ChimaeraConf.north, 0.0, 1.0); // add group

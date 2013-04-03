@@ -33,12 +33,12 @@
 	SynthDef(synthname, {|freq=0, amp=0, p=0, gate=1, out=0|
 		var env, freq2, sig;
 
-		freq = LinExp.kr(freq, 0, 1, (2*12-0.5).midicps, (6*12+0.5).midicps);
-		freq2 = LinLin.kr(amp, 0, 1, (0*12).midicps, freq*12);
+		freq = LinExp.kr(freq, 0, 1, (3*12-0.5).midicps, (7*12+0.5).midicps);
+		freq2 = LinLin.kr(amp, 0, 1, (1*12).midicps, (7*12).midicps);
 
-		env = EnvGen.kr(Env.asr(0.01, 1.0, 0.02, 1.0, -3), gate);
-		sig = SyncSaw.ar(freq, freq2, mul:env*0.5);
-		sig = RLPF.ar(sig, freq2*3, 0.1);
+		env = Linen.kr(gate, 0.01, 0.5, 0.02);
+		sig = SyncSaw.ar(freq, freq2, mul:env);
+		sig = RLPF.ar(sig, freq2*4, 0.1);
 		sig = FreeVerb.ar(sig);
 		OffsetOut.ar(out, sig);
 	}).add;

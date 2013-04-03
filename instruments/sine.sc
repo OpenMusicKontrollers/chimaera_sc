@@ -35,7 +35,7 @@
 
 		freq = LinExp.kr(freq, 0, 1, (3*12-0.5).midicps, (7*12+0.5).midicps);
 
-		env = EnvGen.kr(Env.asr(0.01, 1.0, 0.02, 1.0, -3), gate);
+		env = Linen.kr(gate, 0.01, 1.0, 0.02);
 		sig = SinOsc.ar(freq, mul:amp*env);
 		OffsetOut.ar(out, sig);
 	}).add;

@@ -36,7 +36,7 @@
 		freq = LinExp.kr(freq, 0, 1, (3*12-0.5).midicps, (7*12+0.5).midicps);
 
 		vol = LinExp.kr(amp, 0.0, 1.0, 0.5, 1.0);
-		env = EnvGen.kr(Env.asr(0.01, 1.0, 10.0, 1.0, -3), gate);
+		env = Linen.kr(gate, 0.01, 1.0, 0.02);
 		sig = Pluck.ar(WhiteNoise.ar(0.1), gate, 1, freq.reciprocal, 10, 0.20);
 		sig = (sig*amp*1000).distort;
 		sig = FreeVerb.ar(sig, mix:0.8, room:0.5, damp:0.1, mul:vol*env);

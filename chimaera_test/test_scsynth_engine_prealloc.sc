@@ -62,7 +62,8 @@ s.doWhenBooted({
 		id: [2000, 2001, 2002, 2003],
 		group: baseID,
 		out: baseID,
-		gate: 0
+		freq: 0.1, // we need to initialize this
+		amp: 0.1
 	).play;
 
 	(
@@ -72,7 +73,13 @@ s.doWhenBooted({
 		id: [2004, 2005, 2006, 2007],
 		group: leadID,
 		out: leadID,
-		gate: 0
+		freq: 0.1, // we need to initialize this
+		amp: 0.1
+	).play;
+
+	(
+		type: \off,
+		id: [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007]
 	).play;
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
