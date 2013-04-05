@@ -55,17 +55,17 @@ s.doWhenBooted({
 	leadID = 1;
 
 	baseInst = [
-		"sine",
+		"delay1",
 		"analog",
 		"syncsaw",
-		"pluck"
+		"blip"
 	];
 
 	leadInst = [
 		"grain",
-		"analog",
 		"syncsaw",
-		"pluck"
+		"pluck",
+		"blip"
 	];
 
 	"../templates/two_groups.sc".load.value(baseID, leadID);

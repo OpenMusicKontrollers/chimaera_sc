@@ -21,65 +21,30 @@
  *     distribution.
  */
 
-{
-	arg baseID, leadID;
+/*
+ * simple sine-wave
+ *
+ * x := freq
+ * z := volume
+ */
 
-	// create groups in scsynth via events
-	(
-		type: \group,
-		id: baseID,
-		group: 0 // as child of root group
-	).play;
+{|synthname|
 
-	(
-		type: \group,
-		id: leadID,
-		group: 0 // as child of root group
-	).play;
+	SynthDef(synthname, {|freq=0, amp=0, p=0, gate=1, out=0|
+		var env, sig, trig, trigsplit, delaytimes;
 
-	SynthDef(\gain, {|amp=0, pan=0, out=0| // define our synth
-		var sig;
-		sig = In.ar(out);
-		ReplaceOut.ar(out, sig*amp);
+		freq = LinExp.kr(freq, 0, 1, (3*12-0.5).midicps, (7*12+0.5).midicps);
+
+		env = Linen.kr(gate, 0.01, 1.0, 1.0);
+
+		trig = Dust.ar(LinExp.kr(amp, 0, 1, 2, 20));
+		trigsplit = PulseDivider.ar(trig, 2, [0, 1]);
+		delaytimes = Lag.ar(TRand.ar(0.005, 0.05, trigsplit), 0.07); 
+
+		sig = Saw.ar(freq * [1, 1.003], mul:env).sum * 0.1;
+		sig = LPF.ar(sig, 9000); 
+		sig = sig + DelayL.ar(sig, 0.05, delaytimes); 
+
+		OffsetOut.ar(out, sig);
 	}).add;
-
-	SynthDef(\pan, { // define our synth
-		var base, lead, sig;
-		base = In.ar(baseID);
-		lead = In.ar(leadID);
-		base = Pan2.ar(base, -0.5, 0.3);
-		lead = Pan2.ar(lead, 0.5, 0.3);
-		sig = base + lead;
-		ReplaceOut.ar(0, sig);
-	}).add;
-
-	s.sync;
-
-	// group gains
-	(
-		type: \on,
-		addAction: \addToTail,
-		instrument: \gain,
-		id: baseID+50,
-		group: baseID,
-		out: baseID,
-		amp: 0.5
-	).play;
-
-	(
-		type: \on,
-		addAction: \addToTail,
-		instrument: \gain,
-		id: leadID+50,
-		group: leadID,
-		out: leadID,
-		amp: 1.0
-	).play;
-
-	(
-		type: \on,
-		addAction: \addToTail,
-		instrument: \pan,
-		group: 0
-	).play;
 }

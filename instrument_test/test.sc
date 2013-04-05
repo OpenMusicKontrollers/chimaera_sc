@@ -33,7 +33,7 @@ s.doWhenBooted({
 
 	"../instruments/blip.sc".load.value(\inst);
 
-	1.wait;
+	s.sync;
 
 	(
 		type: \group,
@@ -43,28 +43,35 @@ s.doWhenBooted({
 
 	Pbind(
 		\instrument, \inst,
-		\freq, Pgeom(0.5, 1.0, inf),
-		\amp, Pgeom(0.5, 1.0, inf),
+		\freq, Prand([0.5], inf),
+		\amp, Prand([0.5], inf),
 		\dur, Prand([0.1, 0.2, 0.4], inf),
 		\out, [0,1],
 		\group, 20
 	).play;
 
 	OSCFunc({|msg, time, addr, port|
-		var f, a;
-
-		msg.postln;
-		f = msg[1];
-		a = msg[2];
-
 		(
+			type: \set,
 			group: 20,
-			freq: f,
-			amp: a
+			freq: msg[3]
 		).play;
-	}, "/inst", nil);
+	}, "/freq", nil);
+
+	OSCFunc({|msg, time, addr, port|
+		(
+			type: \set,
+			group: 20,
+			amp: msg[3]
+		).play;
+	}, "/amp", nil);
 
 	{
-		SendTrig.kr(Impulse.kr(2000), "/inst", SinOsc.kr(20), SinOsc.kr(20));
+		var trig, freq, amp;
+		trig = Impulse.kr(2000);
+		freq = SinOsc.kr(0.1, mul:0.5, add:0.5);
+		amp = SinOsc.kr(0.1, mul:0.5, add:0.5);
+		SendReply.kr(trig, "/freq", freq);
+		//SendReply.kr(trig, "/amp", amp);
 	}.play;
 });

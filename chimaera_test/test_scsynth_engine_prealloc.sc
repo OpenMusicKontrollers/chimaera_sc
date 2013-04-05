@@ -52,7 +52,7 @@ s.doWhenBooted({
 	"../instruments/sine.sc".load.value(\base);
 	"../instruments/sine.sc".load.value(\lead);
 
-	1.wait;
+	s.sync;
 
 	// preallocate 4 synths per group
 	(
