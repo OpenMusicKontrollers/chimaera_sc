@@ -23,7 +23,7 @@
 
 StompOtto {
 	classvar ctrue, cfalse;
-	var rx, stomp, <>on, <>off;
+	var rx, stomp, listen, <>on, <>off;
 
 	*new {|s, iRx|
 		^super.new.init(s, iRx);
@@ -40,7 +40,7 @@ StompOtto {
 		// handling tuio messages
 		stomp = OSCFunc({|msg, time, addr, port|
 			var state, id;
-
+	
 			state = msg[1];
 			id = msg[2];
 
@@ -53,7 +53,15 @@ StompOtto {
 					off.value(id);
 				}
 			};
-		}, "/stompotto", rx);
+		}, "/stompotto/key", rx);
+
+		listen = OSCFunc({|msg, time, addr, port|
+			var channel, value;
+			channel = msg[1];
+			value = msg[2];
+			//tx.sendMsg('/stompotto/led', channel, value);
+			rx.sendMsg('/stompotto/led', channel, value.asInteger);
+		}, "/stomp", nil);
 
 		on = nil;
 		off = nil;
@@ -61,5 +69,19 @@ StompOtto {
 
 	init {|s, iRx|
 		this.initConn(iRx);
+	}
+
+	ar {|channel=0, in, rate=2000|
+		var trig, out;
+		trig = Impulse.ar(rate);
+		out = SendReply.ar(trig, '/stomp', channel, in);
+		^out;
+	}
+
+	kr {|channel=0, in, rate=2000|
+		var trig, out;
+		trig = Impulse.kr(rate);
+		out = SendReply.kr(trig, '/stomp', channel, in);
+		^out;
 	}
 }

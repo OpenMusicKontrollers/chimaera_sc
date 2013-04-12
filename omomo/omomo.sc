@@ -40,6 +40,11 @@ s.doWhenBooted({
 
 	chimconf = ChimaeraConf(s, txrx, txrx);
 
+	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
+
+	chimconf.sendMsg("/chimaera/movingaverage/enabled", true); // enable moving average of ADC sampling
+	chimconf.sendMsg("/chimaera/movingaverage/samples", 8); // set moving average window to 8 samples
+
 	chimconf.sendMsg("/chimaera/output/enabled", true); // enable output socket on device
 	chimconf.sendMsg("/chimaera/output/address", "192.168.1.10:57110"); // send to scsynth port
 	chimconf.sendMsg("/chimaera/output/offset", 0.001); // add 1ms offset to bundle timestamps
@@ -55,22 +60,23 @@ s.doWhenBooted({
 	leadID = 1;
 
 	baseInst = [
-		"delay1",
+		"grain",
 		"analog",
-		"syncsaw",
+		"pluck",
 		"blip"
 	];
 
 	leadInst = [
 		"grain",
-		"syncsaw",
+		"analog",
 		"pluck",
 		"blip"
 	];
 
+	//"../templates/two_groups_separate.sc".load.value(baseID, leadID);
 	"../templates/two_groups.sc".load.value(baseID, leadID);
 	"../instruments/analog.sc".load.value(\base);
-	"../instruments/syncsaw.sc".load.value(\lead);
+	"../instruments/analog.sc".load.value(\lead);
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
 	chimconf.sendMsg("/chimaera/group/set", baseID, \base, ChimaeraConf.north, 0.0, 1.0); // add group

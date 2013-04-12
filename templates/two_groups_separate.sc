@@ -1,5 +1,3 @@
-#!/usr/bin/sclang
-
 /*
  * Copyright (c) 2012-2013 Hanspeter Portner (agenthp@users.sf.net)
  * 
@@ -23,33 +21,23 @@
  *     distribution.
  */
 
-s.options.blockSize = 0x10;
-s.options.memSize = 0x10000;
-s.latency = nil;
-s.boot;
+{
+	arg baseID, leadID;
 
-s.doWhenBooted({
-	var rx, stompotto;
+	// create groups in scsynth via events
+	(
+		type: \group,
+		id: baseID,
+		group: 0, // as child of root group
+		out: baseID
+	).play;
 
-	thisProcess.openUDPPort(9999); // open port 9999 for listening to stompotto events
-	rx = NetAddr ("192.168.1.188", 9999);
+	(
+		type: \group,
+		id: leadID,
+		group: 0, // as child of root group
+		out: leadID
+	).play;
 
-	stompotto = StompOtto(s, rx);
-
-	stompotto.on = {|id| // set callback function for on-events
-		["on", id].postln;
-	};
-
-	stompotto.off = {|id| // set callback function for off-events
-		["off", id].postln;
-	};
-
-	{
-		var sig;
-		sig = SinOsc.kr(2, mul:63, add:64);
-		//sig = Pulse.kr(2, mul:63, add:64);
-		//sig = 128 - LFSaw.kr(1, mul:63, add:64);
-		stompotto.kr(0, sig, rate:50);
-	}.play;
-
-})
+	s.sync;
+}

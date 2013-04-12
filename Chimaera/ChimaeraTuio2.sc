@@ -22,7 +22,7 @@
  */
 
 ChimaeraTuio2 {
-	var rx, frm, tok, alv, <>on, <>off, <>set, old_blobs, new_blobs;
+	var rx, frm, tok, alv, <>on, <>off, <>set, old_blobs, new_blobs, last_fid, last_time;
 
 	*new {|s, iRx|
 		^super.new.init(s, iRx);
@@ -32,6 +32,8 @@ ChimaeraTuio2 {
 		rx = iRx;
 		old_blobs = Dictionary.new;
 		new_blobs = Dictionary.new;
+		last_fid = 0;
+		last_time = 0;
 
 		// handling tuio messages
 		frm = OSCFunc({|msg, time, addr, port|
@@ -39,6 +41,10 @@ ChimaeraTuio2 {
 
 			fid = msg[1];
 			timestamp = msg[2];
+	
+			last_fid = fid;
+			last_time = timestamp;
+
 		}, "/tuio2/frm", rx);
 
 		tok = OSCFunc({|msg, time, addr, port|
