@@ -23,10 +23,10 @@
 
 StompOtto {
 	classvar ctrue, cfalse;
-	var rx, stomp, listen, <>on, <>off;
+	var rx, rat, stomp, channel, mytrig, cols, <>on, <>off;
 
-	*new {|s, iRx|
-		^super.new.init(s, iRx);
+	*new {|s, iRx, rate=50|
+		^super.new.init(s, iRx, rate);
 	}
 
 	*initClass {
@@ -55,33 +55,54 @@ StompOtto {
 			};
 		}, "/stompotto/key", rx);
 
-		listen = OSCFunc({|msg, time, addr, port|
-			var channel, value;
-			channel = msg[1];
-			value = msg[2];
+		channel = OSCFunc({|msg, time, addr, port|
+			var id, channel, red, green, blue, col;
+			id = msg[1];
+			channel = msg[2];
+			red = msg[3].asInteger;
+			green = msg[4].asInteger;
+			blue = msg[5].asInteger;
+			col = (red << 16) | (green << 8) | blue;
+			cols[channel] = col;
 			//tx.sendMsg('/stompotto/led', channel, value);
-			rx.sendMsg('/stompotto/led', channel, value.asInteger);
-		}, "/stomp", nil);
+			//rx.sendMsg('/stompotto/led', channel, red.asInteger, green.asInteger, blue.asInteger);
+		}, "/stomp/channel", nil);
+
+		mytrig = OSCFunc({|msg, time, addr, port|
+			//rx.sendMsg('/stompotto/led', cols); // sending as blob
+			rx.sendMsg('/stompotto/led', cols[0], cols[1], cols[2], cols[3], cols[4], cols[5], cols[6], cols[7]); // sending as blob
+		}, "/stomp/trig", nil);
+
+		cols = Array.newClear(8);
 
 		on = nil;
 		off = nil;
 	}
 
-	init {|s, iRx|
+	init {|s, iRx, rate|
+		rat = rate;
 		this.initConn(iRx);
 	}
 
-	ar {|channel=0, in, rate=2000|
+	ar {|channel=0, red, green, blue, rate=2000|
 		var trig, out;
-		trig = Impulse.ar(rate);
-		out = SendReply.ar(trig, '/stomp', channel, in);
+		trig = Impulse.ar(rat);
+		out = SendReply.ar(trig, '/stomp/channel', [red, green, blue], replyID: channel);
 		^out;
 	}
 
-	kr {|channel=0, in, rate=2000|
+	kr {|channel=0, red, green, blue, rate=2000|
 		var trig, out;
-		trig = Impulse.kr(rate);
-		out = SendReply.kr(trig, '/stomp', channel, in);
+		trig = Impulse.kr(rat);
+		out = SendReply.kr(trig, '/stomp/channel', [red, green, blue], replyID: channel);
 		^out;
+	}
+
+	play {
+		{
+			var trig;
+			trig = Impulse.kr(rat);
+			SendReply.kr(trig, '/stomp/trig');
+		}.play;
 	}
 }

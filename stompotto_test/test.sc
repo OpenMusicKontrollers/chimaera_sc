@@ -29,12 +29,12 @@ s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var rx, stompotto;
+	var rx, stompotto, rainbow;
 
 	thisProcess.openUDPPort(9999); // open port 9999 for listening to stompotto events
 	rx = NetAddr ("192.168.1.188", 9999);
 
-	stompotto = StompOtto(s, rx);
+	stompotto = StompOtto(s, rx, rate:50);
 
 	stompotto.on = {|id| // set callback function for on-events
 		["on", id].postln;
@@ -44,12 +44,60 @@ s.doWhenBooted({
 		["off", id].postln;
 	};
 
-	{
-		var sig;
-		sig = SinOsc.kr(2, mul:63, add:64);
-		//sig = Pulse.kr(2, mul:63, add:64);
-		//sig = 128 - LFSaw.kr(1, mul:63, add:64);
-		stompotto.kr(0, sig, rate:50);
-	}.play;
+	stompotto.play;
 
+	SynthDef(\led, {|channel, r1, g1, b1, r2, g2, b2, time|
+		var red, green, blue, lum;
+		red = Line.kr(r1, r2, time, doneAction:2);
+		green = Line.kr(g1, g2, time);
+		blue = Line.kr(b1, b2, time);
+		lum = Line.kr(1, 0, time);
+		//lum = 1;
+		stompotto.kr(channel, red*lum, green*lum, blue*lum);
+	}).add;
+
+	s.sync;
+
+	rainbow = [
+		// red, yellow, green, cyan, blue, magenta
+		255*[1.0, 0.5, 0.0, 0.0, 0.0, 0.5], // red channel
+		255*[0.0, 0.5, 1.0, 0.5, 0.0, 0.0], // green channel
+		255*[0.0, 0.0, 0.0, 0.5, 1.0, 0.5]  // blue	channel
+	];
+
+	Pbind(
+		\instrument, \led,
+
+		\channel, 0,
+
+		\r1, Pseq(rainbow[0], inf),
+		\g1, Pseq(rainbow[1], inf),
+		\b1, Pseq(rainbow[2], inf),
+
+		\r2, Pseq(rainbow[0].rotate(-1), inf),
+		\g2, Pseq(rainbow[1].rotate(-1), inf),
+		\b2, Pseq(rainbow[2].rotate(-1), inf),
+
+		\time, 1,
+		\dur, 1
+	).play;
+
+	0.5.wait;
+
+	Pbind(
+		\instrument, \led,
+
+		\channel, 1,
+
+		\r1, Pseq(rainbow[0], inf),
+		\g1, Pseq(rainbow[1], inf),
+		\b1, Pseq(rainbow[2], inf),
+
+		\r2, Pseq(rainbow[0].rotate(-1), inf),
+		\g2, Pseq(rainbow[1].rotate(-1), inf),
+		\b2, Pseq(rainbow[2].rotate(-1), inf),
+
+		\time, 1,
+		\dur, 1
+	).play;
 })
