@@ -51,8 +51,8 @@ s.doWhenBooted({
 		red = Line.kr(r1, r2, time, doneAction:2);
 		green = Line.kr(g1, g2, time);
 		blue = Line.kr(b1, b2, time);
-		lum = Line.kr(1, 0, time);
-		//lum = 1;
+		//lum = Line.kr(1, 0, time);
+		lum = 1;
 		stompotto.kr(channel, red*lum, green*lum, blue*lum);
 	}).add;
 
