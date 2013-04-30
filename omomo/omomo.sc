@@ -1,7 +1,7 @@
 #!/usr/bin/sclang
 
 /*
- * Copyright (c) 2012-2013 Hanspeter Portner (agenthp@users.sf.net)
+ * Copyright (c) 2013 Hanspeter Portner (agenthp@users.sf.net)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -30,7 +30,7 @@ s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var inst, txrx, chimconf, instruments, baseID, leadID, stompotto, baseInst, leadInst;
+	var inst, txrx, chimconf, instruments, baseID, leadID, stompotto, baseInst, leadInst, looper, pacemaker, trigbus, rate;
 
 	/*
 	 * Chimaera
@@ -60,27 +60,43 @@ s.doWhenBooted({
 	leadID = 1;
 
 	baseInst = [
-		"grain",
 		"analog",
+		"syncsaw",
+		"sine",
+		"grain",
 		"pluck",
 		"blip"
 	];
 
 	leadInst = [
-		"grain",
 		"analog",
+		"syncsaw",
+		"sine",
+		"grain",
 		"pluck",
 		"blip"
 	];
 
-	//"../templates/two_groups_separate.sc".load.value(baseID, leadID);
-	"../templates/two_groups.sc".load.value(baseID, leadID);
+	"../templates/two_groups_separate.sc".load.value(baseID, leadID);
+	//"../templates/two_groups.sc".load.value(baseID, leadID);
 	"../instruments/analog.sc".load.value(\base);
 	"../instruments/analog.sc".load.value(\lead);
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
 	chimconf.sendMsg("/chimaera/group/set", baseID, \base, ChimaeraConf.north, 0.0, 1.0); // add group
 	chimconf.sendMsg("/chimaera/group/set", leadID, \lead, ChimaeraConf.south, 0.0, 1.0); // add group
+
+	/*
+	 * PaceMaker
+	 */
+	trigbus = 20;
+	rate = 1/4;
+	pacemaker = PaceMaker(s, trigbus, rate);
+
+	/*
+	 * Looper
+	 */
+	looper = Looper(s, 2, 10);
 
 	/*
 	 * StompOtto
@@ -91,14 +107,28 @@ s.doWhenBooted({
 	stompotto.on = {|id| // set callback function for on-events
 		["on", id].postln;
 
-		if (id < 4) {
-			("../instruments/"++baseInst[id]++".sc").load.value(\base);
-		} {
-			("../instruments/"++leadInst[id-4]++".sc").load.value(\lead);
-		}
+		switch(id,
+			0, { baseInst=baseInst.rotate(-1); ("../instruments/"++baseInst[0]++".sc").load.value(\base) },
+			1, { baseInst=baseInst.rotate( 1); ("../instruments/"++baseInst[0]++".sc").load.value(\base) },
+			2, { leadInst=leadInst.rotate(-1); ("../instruments/"++leadInst[0]++".sc").load.value(\lead) },
+			3, { leadInst=leadInst.rotate( 1); ("../instruments/"++leadInst[0]++".sc").load.value(\lead) },
+			4, { looper.record(baseID, baseID, trigbus) },
+			5, { looper.play(baseID, baseID, trigbus) },
+			6, { looper.record(leadID, leadID, trigbus) },
+			7, { looper.play(leadID, leadID, trigbus) });
 	};
 
 	stompotto.off = {|id| // set callback function for off-events
 		["off", id].postln;
+
+		switch(id,
+			0, { baseInst=baseInst.rotate(-1); ("../instruments/"++baseInst[0]++".sc").load.value(\base) },
+			1, { baseInst=baseInst.rotate( 1); ("../instruments/"++baseInst[0]++".sc").load.value(\base) },
+			2, { leadInst=leadInst.rotate(-1); ("../instruments/"++leadInst[0]++".sc").load.value(\lead) },
+			3, { leadInst=leadInst.rotate( 1); ("../instruments/"++leadInst[0]++".sc").load.value(\lead) },
+			4, { looper.abort(baseID) },
+			5, { looper.stop(baseID) },
+			6, { looper.abort(leadID) },
+			7, { looper.stop(leadID) });
 	};
 })
