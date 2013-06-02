@@ -42,8 +42,8 @@ s.doWhenBooted({
 
 	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
 
-	chimconf.sendMsg("/chimaera/movingaverage/enabled", true); // enable moving average of ADC sampling
-	chimconf.sendMsg("/chimaera/movingaverage/samples", 8); // set moving average window to 8 samples
+	//chimconf.sendMsg("/chimaera/movingaverage/enabled", true); // enable moving average of ADC sampling
+	//chimconf.sendMsg("/chimaera/movingaverage/samples", 8); // set moving average window to 8 samples
 
 	chimconf.sendMsg("/chimaera/output/enabled", true); // enable output socket on device
 	chimconf.sendMsg("/chimaera/output/address", "192.168.1.10:57110"); // send to scsynth port
@@ -87,7 +87,7 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/group/set", leadID, \lead, ChimaeraConf.south, 0.0, 1.0); // add group
 
 	/*
-	 * Looper
+	 * SooperLooper
 	 */
 	looper = SooperLooper(s, NetAddr("localhost", 9951));
 
