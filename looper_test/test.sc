@@ -26,12 +26,13 @@
 s.boot;
 
 s.doWhenBooted({
-	var looper, channel, trigbus, pacemaker;
+	var looper, channel, bar, beat, pacemaker;
 
-	trigbus = 20;
+	bar = 20;
+	beat = 21;
 	looper = Looper(s, 4, 10);
 
-	pacemaker = PaceMaker(s, trigbus, 1/4);
+	pacemaker = PaceMaker(s, [bar, beat], 250, 4);
 
 	channel = 0;
 
@@ -41,7 +42,7 @@ s.doWhenBooted({
 		state = msg[2];
 		if(state != 0) {
 			("starting recording on channel" ++ channel).postln;
-			looper.record(channel, 8, trigbus);
+			looper.record(channel, 8, bar);
 		} {
 			("stopping recording on channel" ++ channel).postln;
 			looper.abort(channel);
@@ -54,7 +55,7 @@ s.doWhenBooted({
 		state = msg[2];
 		if(state != 0) {
 			("starting playback on channel" ++ channel).postln;
-			looper.play(channel, 0, trigbus);
+			looper.play(channel, 0, bar);
 		} {
 			("stopping playback on channel" ++ channel).postln;
 			looper.stop(channel);

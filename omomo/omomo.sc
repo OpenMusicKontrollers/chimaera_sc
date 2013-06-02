@@ -30,7 +30,7 @@ s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var inst, txrx, chimconf, instruments, baseID, leadID, stompotto, baseInst, leadInst, looper, pacemaker, trigbus, rate;
+	var inst, txrx, chimconf, instruments, baseID, leadID, stompotto, baseInst, leadInst, looper;
 
 	/*
 	 * Chimaera
@@ -42,8 +42,8 @@ s.doWhenBooted({
 
 	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
 
-	chimconf.sendMsg("/chimaera/movingaverage/enabled", true); // enable moving average of ADC sampling
-	chimconf.sendMsg("/chimaera/movingaverage/samples", 8); // set moving average window to 8 samples
+	//chimconf.sendMsg("/chimaera/movingaverage/enabled", true); // enable moving average of ADC sampling
+	//chimconf.sendMsg("/chimaera/movingaverage/samples", 8); // set moving average window to 8 samples
 
 	chimconf.sendMsg("/chimaera/output/enabled", true); // enable output socket on device
 	chimconf.sendMsg("/chimaera/output/address", "192.168.1.10:57110"); // send to scsynth port
@@ -87,16 +87,9 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/group/set", leadID, \lead, ChimaeraConf.south, 0.0, 1.0); // add group
 
 	/*
-	 * PaceMaker
+	 * SooperLooper
 	 */
-	trigbus = 20;
-	rate = 1/4;
-	pacemaker = PaceMaker(s, trigbus, rate);
-
-	/*
-	 * Looper
-	 */
-	looper = Looper(s, 2, 10);
+	looper = SooperLooper(s, NetAddr("localhost", 9951));
 
 	/*
 	 * StompOtto
@@ -112,10 +105,10 @@ s.doWhenBooted({
 			1, { baseInst=baseInst.rotate( 1); ("../instruments/"++baseInst[0]++".sc").load.value(\base) },
 			2, { leadInst=leadInst.rotate(-1); ("../instruments/"++leadInst[0]++".sc").load.value(\lead) },
 			3, { leadInst=leadInst.rotate( 1); ("../instruments/"++leadInst[0]++".sc").load.value(\lead) },
-			4, { looper.record(baseID, baseID, trigbus) },
-			5, { looper.play(baseID, baseID, trigbus) },
-			6, { looper.record(leadID, leadID, trigbus) },
-			7, { looper.play(leadID, leadID, trigbus) });
+			4, { looper.record(baseID) },
+			5, { looper.substitute(baseID) },
+			6, { looper.record(leadID) },
+			7, { looper.substitute(leadID) });
 	};
 
 	stompotto.off = {|id| // set callback function for off-events
@@ -126,9 +119,9 @@ s.doWhenBooted({
 			1, { baseInst=baseInst.rotate( 1); ("../instruments/"++baseInst[0]++".sc").load.value(\base) },
 			2, { leadInst=leadInst.rotate(-1); ("../instruments/"++leadInst[0]++".sc").load.value(\lead) },
 			3, { leadInst=leadInst.rotate( 1); ("../instruments/"++leadInst[0]++".sc").load.value(\lead) },
-			4, { looper.abort(baseID) },
-			5, { looper.stop(baseID) },
-			6, { looper.abort(leadID) },
-			7, { looper.stop(leadID) });
+			4, { looper.record(baseID) },
+			5, { looper.substitute(baseID) },
+			6, { looper.record(leadID) },
+			7, { looper.substitute(leadID) });
 	};
 })

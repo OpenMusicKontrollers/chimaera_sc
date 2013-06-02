@@ -103,24 +103,39 @@ Looper {
 }
 
 PaceMaker {
-	var pace, rat;
+	var pace, barRate, beatRate;
 
-	*new {|s, out, rate|
-		^super.new.init(s, out, rate);
+	*new {|s, out, beatsPerMinute, beatsPerBar|
+		^super.new.init(s, out, beatsPerMinute, beatsPerBar);
 	}
 
-	init {|s, out, rate|
-		SynthDef(\pace_maker, {|out=20, rate=0.25|
-			Out.kr(out, Impulse.kr(rate));
+	init {|s, out, beatsPerMinute=200, beatsPerBar=4|
+		SynthDef(\pace_maker, {|out, barRate, beatRate|
+			var bar, beat;
+			bar = Impulse.kr(barRate);
+			beat = Impulse.kr(beatRate);
+			SendReply.kr(bar, '/bar');
+			SendReply.kr(beat, '/beat');
+			Out.kr(out, [bar, beat]);
 		}).add;
 
-		rat = rate;
+		beatRate = beatsPerMinute / 60;
+		barRate = beatRate / beatsPerBar;
 
 		pace = ( type: \on,
 			instrument: \pace_maker,
 			out: out,
-			rate: rat
+			barRate: barRate,
+			beatRate: beatRate
 		).play;
+
+		OSCFunc({|msg, time, addr, port|
+			"\r".post;
+		}, "/bar", nil);
+
+		OSCFunc({|msg, time, addr, port|
+			"|".post;
+		}, "/beat", nil);
 	}
 
 	free {
@@ -131,16 +146,34 @@ PaceMaker {
 		}
 	}
 
-	rate {
-		^rat;
+	beatsPerMinute {
+		^(barRate*60);
 	}
 
-	rate_ {|rate|
-		rat = rate;
+	beatsPerBar {
+		^(beatRate/barRate);
+	}
+
+	beatsPerMinute_ {|beatsPerMinute|
+		var beatsPerBar;
+		beatsPerBar = beatRate / barRate;
+
+		beatRate = beatsPerMinute / 60;
+		barRate = beatRate / beatsPerBar;
 
 		( type: \set,
 			id: pace.id,
-			rate: rat
+			barRate: barRate,
+			beatRate: beatRate
+		).play;
+	}
+
+	beatsPerBar_ {|beatsPerBar|
+		barRate = beatRate / beatsPerBar;
+
+		( type: \set,
+			id: pace.id,
+			barRate: barRate
 		).play;
 	}
 }
