@@ -23,14 +23,42 @@
  *     distribution.
  */
 
-Server.supernova;
 s.options.blockSize = 0x10;
 s.options.memSize = 0x10000;
 s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var inst, txrx, chimconf, instruments, baseID, leadID, stompotto, baseInst, leadInst, looper, pacemaker, trigbus, rate;
+	var inst, txrx, chimconf, instruments, baseID, leadID, baseIDs, leadIDs, stompotto, baseInst, leadInst, looper, loadInst;
+
+	/*
+	 * load instrument and prealloc synths
+	 */
+	loadInst = {|group, groupID, groupIDs, inst|
+		(
+			type: \kill,
+			id: groupIDs
+		).play;
+
+		("../instruments/"++inst++".sc").load.value(group);
+
+		(
+			type: \on,
+			addAction: \addToHead,
+			instrument: group,
+			id: groupIDs,
+			group: groupID,
+			out: groupID,
+			freq: 0.1, // we need to initialize this
+			amp: 1.0,
+			p: 0
+		).play;
+
+		(
+			type: \off,
+			id: groupIDs
+		).play;
+	};
 
 	/*
 	 * Chimaera
@@ -51,13 +79,16 @@ s.doWhenBooted({
 
 	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
 	chimconf.sendMsg("/chimaera/scsynth/instrument", \lead); // set scsynth instrument name
-	chimconf.sendMsg("/chimaera/scsynth/prealloc", false); // use dynamic mode of scsynth output engine
-	chimconf.sendMsg("/chimaera/scsynth/offset", 1000); // offset of new synthdef ids
-	chimconf.sendMsg("/chimaera/scsynth/modulo", 8000); // modulo of new synthdef ids
+	chimconf.sendMsg("/chimaera/scsynth/prealloc", true); // use prealloc mode of scsynth output engine
+	chimconf.sendMsg("/chimaera/scsynth/offset", 2000); // offset of new synthdef ids
+	chimconf.sendMsg("/chimaera/scsynth/modulo", 2); // modulo of new synthdef ids
 	// id numbers on device will cycle linearly from offset to (offset+modulo) circularly
 
 	baseID = 0;
 	leadID = 1;
+
+	baseIDs = [2000, 2001];
+	leadIDs = [2002, 2003];
 
 	baseInst = [
 		"analog",
@@ -79,24 +110,17 @@ s.doWhenBooted({
 
 	"../templates/two_groups_separate.sc".load.value(baseID, leadID);
 	//"../templates/two_groups.sc".load.value(baseID, leadID);
-	"../instruments/analog.sc".load.value(\base);
-	"../instruments/analog.sc".load.value(\lead);
+	loadInst.value(\base, baseID, baseIDs, baseInst[0]);
+	loadInst.value(\lead, leadID, leadIDs, leadInst[1]);
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
 	chimconf.sendMsg("/chimaera/group/set", baseID, \base, ChimaeraConf.north, 0.0, 1.0); // add group
 	chimconf.sendMsg("/chimaera/group/set", leadID, \lead, ChimaeraConf.south, 0.0, 1.0); // add group
 
 	/*
-	 * PaceMaker
-	 */
-	trigbus = 20;
-	rate = 1/4;
-	pacemaker = PaceMaker(s, trigbus, rate);
-
-	/*
 	 * Looper
 	 */
-	looper = Looper(s, 2, 10);
+	looper = SooperLooper(s, NetAddr("localhost", 9951));
 
 	/*
 	 * StompOtto
@@ -108,27 +132,29 @@ s.doWhenBooted({
 		["on", id].postln;
 
 		switch(id,
-			0, { baseInst=baseInst.rotate(-1); ("../instruments/"++baseInst[0]++".sc").load.value(\base) },
-			1, { baseInst=baseInst.rotate( 1); ("../instruments/"++baseInst[0]++".sc").load.value(\base) },
-			2, { leadInst=leadInst.rotate(-1); ("../instruments/"++leadInst[0]++".sc").load.value(\lead) },
-			3, { leadInst=leadInst.rotate( 1); ("../instruments/"++leadInst[0]++".sc").load.value(\lead) },
-			4, { looper.record(baseID, baseID, trigbus) },
-			5, { looper.play(baseID, baseID, trigbus) },
-			6, { looper.record(leadID, leadID, trigbus) },
-			7, { looper.play(leadID, leadID, trigbus) });
+			0, { baseInst=baseInst.rotate(-1); loadInst.value(\base, baseID, baseIDs, baseInst[0]) },
+			1, { baseInst=baseInst.rotate( 1); loadInst.value(\base, baseID, baseIDs, baseInst[0]) },
+			2, { leadInst=leadInst.rotate(-1); loadInst.value(\lead, leadID, leadIDs, leadInst[0]) },
+			3, { leadInst=leadInst.rotate( 1); loadInst.value(\lead, leadID, leadIDs, leadInst[0]) },
+
+			4, { looper.record(baseID) },
+			5, { looper.substitute(baseID) },
+			6, { looper.record(leadID) },
+			7, { looper.substitute(leadID) });
 	};
 
 	stompotto.off = {|id| // set callback function for off-events
 		["off", id].postln;
 
 		switch(id,
-			0, { baseInst=baseInst.rotate(-1); ("../instruments/"++baseInst[0]++".sc").load.value(\base) },
-			1, { baseInst=baseInst.rotate( 1); ("../instruments/"++baseInst[0]++".sc").load.value(\base) },
-			2, { leadInst=leadInst.rotate(-1); ("../instruments/"++leadInst[0]++".sc").load.value(\lead) },
-			3, { leadInst=leadInst.rotate( 1); ("../instruments/"++leadInst[0]++".sc").load.value(\lead) },
-			4, { looper.abort(baseID) },
-			5, { looper.stop(baseID) },
-			6, { looper.abort(leadID) },
-			7, { looper.stop(leadID) });
+			0, { baseInst=baseInst.rotate(-1); loadInst.value(\base, baseID, baseIDs, baseInst[0]) },
+			1, { baseInst=baseInst.rotate( 1); loadInst.value(\base, baseID, baseIDs, baseInst[0]) },
+			2, { leadInst=leadInst.rotate(-1); loadInst.value(\lead, leadID, leadIDs, leadInst[0]) },
+			3, { leadInst=leadInst.rotate( 1); loadInst.value(\lead, leadID, leadIDs, leadInst[0]) },
+
+			4, { looper.record(baseID) },
+			5, { looper.substitute(baseID) },
+			6, { looper.record(leadID) },
+			7, { looper.substitute(leadID) });
 	};
 })
