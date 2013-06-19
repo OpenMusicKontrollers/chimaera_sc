@@ -57,12 +57,15 @@
 	lookup = Dictionary.new; // lookup table of currently active keys
 
 	chimtuio2.on = { |time, sid, pid, gid, x, z| // set callback function for blob on-events
-		var midikey = x*48+48;
+		var midikey, cc;
+		midikey = x*48+24;
+		cc = z*0x7f;
 
 		lookup[sid] = midikey.round;
 		midio.noteOn(gid, lookup[sid], 0x7f); // we're using the group id (gid) as MIDI channel number
 		midio.bend(gid, midikey-lookup[sid]/48*0x2000+0x2000); // we're using a pitchbend span of 4800 cents
-		midio.control(gid, 0x4a, z*0x7f); // sound controller #5, change this to volume, modulation, after-touch, ...
+		//midio.control(gid, 0x4a, cc); // sound controller #5, change this to volume, modulation, after-touch, ...
+		midio.control(gid, 0x07, cc); // volume MSB
 	};
 
 	chimtuio2.off = { |time, sid, pid, gid| // set callback function for blob off-events
@@ -71,9 +74,12 @@
 	};
 
 	chimtuio2.set = { |time, sid, pid, gid, x, z| // set callback function for blob set-events
-		var midikey = x*48+48;
+		var midikey, cc;
+		midikey = x*48+24;
+		cc = z*0x7f;
 
-		midio.bend(gid, midikey-lookup[sid]/48*0x2000+0x2000);
-		midio.control(gid, 0x4a, z*0x7f); // sound controller #5
+		midio.bend(gid, midikey-lookup[sid]/48*0x2000+0x2000); // we're using a pitchbend span of 4800 cents
+		//midio.control(gid, 0x4a, cc); // sound controller #5
+		midio.control(gid, 0x07, cc); // volume MSB
 	};
 }.value;

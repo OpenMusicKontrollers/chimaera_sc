@@ -23,14 +23,47 @@
  *     distribution.
  */
 
-Server.supernova;
 s.options.blockSize = 0x10;
 s.options.memSize = 0x10000;
 s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var inst, txrx, chimconf, instruments, baseID, leadID, stompotto, baseInst, leadInst, looper;
+	var inst, txrx, chimconf, baseID, leadID, baseIDs, leadIDs, stompotto, baseInst, leadInst, looper, loadInst;
+
+	/*
+	 * load instrument and prealloc synths
+	 */
+	loadInst = {|group, groupID, groupIDs, inst|
+		( type: \kill,
+			id: groupIDs
+		).play;
+
+		{s.sync}.fork;
+
+		("../instruments/"++inst++".sc").load.value(group);
+
+		{s.sync}.fork;
+
+		( type: \on,
+			addAction: \addToHead,
+			instrument: group,
+			id: groupIDs,
+			group: groupID,
+			out: groupID,
+			freq: 0.1, // we need to initialize this
+			amp: 1.0,
+			p: 0
+		).play;
+
+		{s.sync}.fork;
+
+		( type: \off,
+			id: groupIDs
+		).play;
+
+		{s.sync}.fork;
+	};
 
 	/*
 	 * Chimaera
@@ -42,8 +75,8 @@ s.doWhenBooted({
 
 	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
 
-	//chimconf.sendMsg("/chimaera/movingaverage/enabled", true); // enable moving average of ADC sampling
-	//chimconf.sendMsg("/chimaera/movingaverage/samples", 8); // set moving average window to 8 samples
+	chimconf.sendMsg("/chimaera/movingaverage/enabled", true); // enable moving average of ADC sampling
+	chimconf.sendMsg("/chimaera/movingaverage/samples", 8); // set moving average window to 8 samples
 
 	chimconf.sendMsg("/chimaera/output/enabled", true); // enable output socket on device
 	chimconf.sendMsg("/chimaera/output/address", "192.168.1.10:57110"); // send to scsynth port
@@ -51,13 +84,16 @@ s.doWhenBooted({
 
 	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
 	chimconf.sendMsg("/chimaera/scsynth/instrument", \lead); // set scsynth instrument name
-	chimconf.sendMsg("/chimaera/scsynth/prealloc", false); // use dynamic mode of scsynth output engine
-	chimconf.sendMsg("/chimaera/scsynth/offset", 1000); // offset of new synthdef ids
-	chimconf.sendMsg("/chimaera/scsynth/modulo", 8000); // modulo of new synthdef ids
+	chimconf.sendMsg("/chimaera/scsynth/prealloc", true); // use prealloc mode of scsynth output engine
+	chimconf.sendMsg("/chimaera/scsynth/offset", 2000); // offset of new synthdef ids
+	chimconf.sendMsg("/chimaera/scsynth/modulo", 2); // modulo of new synthdef ids
 	// id numbers on device will cycle linearly from offset to (offset+modulo) circularly
 
 	baseID = 0;
 	leadID = 1;
+
+	baseIDs = [2000, 2001];
+	leadIDs = [2002, 2003];
 
 	baseInst = [
 		"analog",
@@ -79,8 +115,8 @@ s.doWhenBooted({
 
 	"../templates/two_groups_separate.sc".load.value(baseID, leadID);
 	//"../templates/two_groups.sc".load.value(baseID, leadID);
-	"../instruments/analog.sc".load.value(\base);
-	"../instruments/analog.sc".load.value(\lead);
+	loadInst.value(\base, baseID, baseIDs, baseInst[0]);
+	loadInst.value(\lead, leadID, leadIDs, leadInst[0]);
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
 	chimconf.sendMsg("/chimaera/group/set", baseID, \base, ChimaeraConf.north, 0.0, 1.0); // add group
@@ -101,10 +137,10 @@ s.doWhenBooted({
 		["on", id].postln;
 
 		switch(id,
-			0, { baseInst=baseInst.rotate(-1); ("../instruments/"++baseInst[0]++".sc").load.value(\base) },
-			1, { baseInst=baseInst.rotate( 1); ("../instruments/"++baseInst[0]++".sc").load.value(\base) },
-			2, { leadInst=leadInst.rotate(-1); ("../instruments/"++leadInst[0]++".sc").load.value(\lead) },
-			3, { leadInst=leadInst.rotate( 1); ("../instruments/"++leadInst[0]++".sc").load.value(\lead) },
+			0, { baseInst=baseInst.rotate(-1); loadInst.value(\base, baseID, baseIDs, baseInst[0]) },
+			1, { baseInst=baseInst.rotate( 1); loadInst.value(\base, baseID, baseIDs, baseInst[0]) },
+			2, { leadInst=leadInst.rotate(-1); loadInst.value(\lead, leadID, leadIDs, leadInst[0]) },
+			3, { leadInst=leadInst.rotate( 1); loadInst.value(\lead, leadID, leadIDs, leadInst[0]) },
 
 			4, { looper.record(baseID) },
 			5, { looper.substitute(baseID) },
@@ -116,10 +152,10 @@ s.doWhenBooted({
 		["off", id].postln;
 
 		switch(id,
-			0, { baseInst=baseInst.rotate(-1); ("../instruments/"++baseInst[0]++".sc").load.value(\base) },
-			1, { baseInst=baseInst.rotate( 1); ("../instruments/"++baseInst[0]++".sc").load.value(\base) },
-			2, { leadInst=leadInst.rotate(-1); ("../instruments/"++leadInst[0]++".sc").load.value(\lead) },
-			3, { leadInst=leadInst.rotate( 1); ("../instruments/"++leadInst[0]++".sc").load.value(\lead) },
+			0, { baseInst=baseInst.rotate(-1); loadInst.value(\base, baseID, baseIDs, baseInst[0]) },
+			1, { baseInst=baseInst.rotate( 1); loadInst.value(\base, baseID, baseIDs, baseInst[0]) },
+			2, { leadInst=leadInst.rotate(-1); loadInst.value(\lead, leadID, leadIDs, leadInst[0]) },
+			3, { leadInst=leadInst.rotate( 1); loadInst.value(\lead, leadID, leadIDs, leadInst[0]) },
 
 			4, { looper.record(baseID) },
 			5, { looper.substitute(baseID) },

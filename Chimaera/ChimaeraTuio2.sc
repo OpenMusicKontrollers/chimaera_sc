@@ -22,10 +22,15 @@
  */
 
 ChimaeraTuio2 {
-	var rx, frm, tok, alv, <>on, <>off, <>set, old_blobs, new_blobs, last_fid, last_time;
+	classvar first_frame;
+	var rx, frm, tok, alv, <>on, <>off, <>set, old_blobs, new_blobs, last_fid, last_time, missing, ignore;
 
 	*new {|s, iRx|
 		^super.new.init(s, iRx);
+	}
+
+	*classInit {
+		first_frame = 1;
 	}
 
 	initConn {|iRx|
@@ -34,6 +39,8 @@ ChimaeraTuio2 {
 		new_blobs = Dictionary.new;
 		last_fid = 0;
 		last_time = 0;
+		missing = 0;
+		ignore = false;
 
 		// handling tuio messages
 		frm = OSCFunc({|msg, time, addr, port|
@@ -41,6 +48,27 @@ ChimaeraTuio2 {
 
 			fid = msg[1];
 			timestamp = msg[2];
+
+			/*
+			if(fid == first_frame) { // the chimaera has been reset, reset our structs, too
+				old_blobs.clear;
+				new_blobs.clear;
+				last_fid = fid;
+				missing = 0;
+				ignore = false;
+				"chimaera has been reset, plugin is being reset, too".postln;
+			} {
+				if( (fid < last_fid) && (missing > 0) ) {
+					ignore = true;
+					missing = missing - 1;
+				} {
+					if( (last_fid != first_frame) && (fid > last_fid + 1) ) {
+						missing = missing + (fid - last_fid - 1);
+						((fid-last_fid-1)++" bundles ("++(last_fid)++"-"++(fid-1)++" were just found to be missing, total missing bundles: "++(missing)).postln;
+					};
+				};
+			};
+			*/
 	
 			last_fid = fid;
 			last_time = timestamp;
@@ -61,7 +89,13 @@ ChimaeraTuio2 {
 		}, "/tuio2/tok", rx);
 
 		alv = OSCFunc({|msg, time, addr, port|
-			var n;
+			var n, tmp;
+
+			/*
+			if(ignore == true) {
+				^1;
+			};
+			*/
 
 			n = msg.size - 1;
 			if (n != new_blobs.size) {
@@ -85,8 +119,9 @@ ChimaeraTuio2 {
 				};
 			};
 
+			tmp = old_blobs;
 			old_blobs = new_blobs;
-			new_blobs = Dictionary.new;
+			new_blobs = tmp.clear;
 		}, "/tuio2/alv", rx);
 
 		on = nil;
