@@ -29,7 +29,7 @@ s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var rx, tx, chimconf, chimtuio2, instruments, baseID, leadID;
+	var rx, tx, chimconf, chimtuio2, instruments, baseID, leadID, bndl;
 
 	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
 	tx = NetAddr ("chimaera.local", 4444);
@@ -47,11 +47,11 @@ s.doWhenBooted({
 	leadID = 1;
 
 	"../templates/two_groups.sc".load.value(baseID, leadID);
-	"../instruments/analog.sc".load.value(\base);
-	"../instruments/syncsaw.sc".load.value(\lead);
+	"../instruments/sine.sc".load.value(\base);
+	"../instruments/sine.sc".load.value(\lead);
 
 	// create groups in sclang
-	instruments = Dictionary.new;
+	instruments = Order.new;
 	instruments[baseID] = \base;
 	instruments[leadID] = \lead;
 
@@ -63,60 +63,56 @@ s.doWhenBooted({
 	rx = NetAddr ("chimaera.local", 3333);
 	chimtuio2 = ChimaeraTuio2(s, rx);
 
-	chimtuio2.on = { |time, sid, pid, gid, x, z|
-		var id, lag;
+	bndl = List.new(8);
 
-		id = sid+1000; // recycle synth ids between 1000-1999
+	chimtuio2.start = { |time|
+		bndl.clear;
+	};
+
+	chimtuio2.end = { |time|
+		var lag;
+
 		lag = time - SystemClock.beats;	
+		s.listSendBundle(lag, bndl);
+	};
 
-		//["on", sid].postln;
+	chimtuio2.on = { |time, sid, pid, gid, x, z|
+		var lag;
 
-		( // send on event (sets gate=1)
-			type: \on,
-			addAction: \addToHead,
-			instrument: instruments[gid], // choose instrument according to group id
-			id: id,
-			group: gid, // set group membership to group id
-			out: gid, // output channels start counting at 0
-			freq: x,
-			amp: z,
-			lag: lag
-		).play;
+		sid = sid + 1000; // recycle synth ids between 1000-1999
+		lag = time - SystemClock.beats;	
+		//["on", time, sid, lag].postln;
+
+		s.sendMsg('/s_new', instruments[gid], sid, \addToHead, gid, 'out', gid, 'gate', 0);
+		bndl = bndl.add(['/n_set', sid, 0, x, 1, z, 2, pid, 'gate', 1]);
 	};
 
 	chimtuio2.off = { |time, sid, pid, gid|
-		var id, lag;
+		var lag;
 
-		id = sid+1000;
+		sid = sid + 1000;
 		lag = time - SystemClock.beats;	
+		//["off", time, sid].postln;
 
-		//["off", sid].postln;
-
-		( // send off event (sets gate=0)
-			type: \off,
-			id: id,
-			lag: lag
-		).play;
-
-		( // send delayed kill event
-			type: \kill,
-			id: id,
-			lag: lag+1
-		).play;
+		bndl = bndl.add(['/n_set', sid, 'gate', 0]);
 	};
 
 	chimtuio2.set = { |time, sid, pid, gid, x, z|
-		var id, lag;
+		var lag;
 
-		id = sid+1000;
+		sid = sid + 1000;
 		lag = time - SystemClock.beats;	
 
-		( // send update event
-			type: \set,
-			id: id,
-			freq: x,
-			amp: z,
-			lag: lag
-		).play;
+		bndl = bndl.add(['/n_set', sid, 0, x, 1, z, 2, pid]);
 	};
+
+	chimtuio2.idle = { |time|
+		var lag;
+	
+		lag = time - SystemClock.beats;
+
+		s.sendBundle(lag,
+			['/n_set', baseID, 'gate', 0],
+			['/n_set', leadID, 'gate', 0]);
+		};
 })
