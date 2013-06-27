@@ -23,7 +23,7 @@
 
 ChimaeraTuio2 {
 	classvar first_frame;
-	var rx, frm, tok, alv, <>on, <>off, <>set, old_blobs, new_blobs, last_fid, last_time, missing, ignore;
+	var rx, frm, tok, alv, <>start, <>end, <>on, <>off, <>set, <>idle, blobs, old_blobs, last_fid, last_time, missing, ignore;
 
 	*new {|s, iRx|
 		^super.new.init(s, iRx);
@@ -35,8 +35,8 @@ ChimaeraTuio2 {
 
 	initConn {|iRx|
 		rx = iRx;
-		old_blobs = Dictionary.new;
-		new_blobs = Dictionary.new;
+		blobs = Order.new;
+		old_blobs = Array.new;
 		last_fid = 0;
 		last_time = 0;
 		missing = 0;
@@ -47,86 +47,81 @@ ChimaeraTuio2 {
 			var fid, timestamp;
 
 			fid = msg[1];
-			timestamp = msg[2];
+			timestamp = time; //msg[2]; // TODO sclang does not support the OSC timestamp as argument
 
-			/*
-			if(fid == first_frame) { // the chimaera has been reset, reset our structs, too
-				old_blobs.clear;
-				new_blobs.clear;
-				last_fid = fid;
-				missing = 0;
-				ignore = false;
-				"chimaera has been reset, plugin is being reset, too".postln;
-			} {
-				if( (fid < last_fid) && (missing > 0) ) {
-					ignore = true;
-					missing = missing - 1;
-				} {
-					if( (last_fid != first_frame) && (fid > last_fid + 1) ) {
-						missing = missing + (fid - last_fid - 1);
-						((fid-last_fid-1)++" bundles ("++(last_fid)++"-"++(fid-1)++" were just found to be missing, total missing bundles: "++(missing)).postln;
-					};
-				};
+			if(fid != (last_fid+1) ) {
+				missing = missing + 1;
+				["message missing", last_fid, fid, missing].postln;
 			};
-			*/
+
+			ignore = false;
+			if(timestamp < last_time) {
+				["message late", timestamp, last_time].postln;
+				ignore = true;
+			};
 	
 			last_fid = fid;
 			last_time = timestamp;
 
+			if(start.notNil) {start.value(time)};
+
 		}, "/tuio2/frm", rx);
 
 		tok = OSCFunc({|msg, time, addr, port|
-			var sid, pid, gid, x, z, a;
+			var o, sid, pid, gid, x, z;
 
-			sid = msg[1];
-			pid = msg[2] & 0xffff;
-			gid = msg[3];
-			x = msg[4];
-			z = msg[5];
-			//a = msg[6]; // not used
+			if(ignore == false) {
+				sid = msg[1];
+				pid = msg[2] & 0xffff;
+				gid = msg[3];
+				x = msg[4];
+				z = msg[5];
+				//a = msg[6]; // not used
 
-			new_blobs[sid] = [time, sid, pid, gid, x, z];
+				blobs[sid] = [time, sid, pid, gid, x, z];
+			};
 		}, "/tuio2/tok", rx);
 
 		alv = OSCFunc({|msg, time, addr, port|
 			var n, tmp;
 
-			/*
-			if(ignore == true) {
-				^1;
-			};
-			*/
+			if(ignore == false) {
+				msg.removeAt(0); // remove /tuio2/alv
 
-			n = msg.size - 1;
-			if (n != new_blobs.size) {
-				n = new_blobs.size};
-
-			// search for disappeard blobs
-			old_blobs do: {|v|
-				if (new_blobs[v[1]].isNil)
-				{
-					if(off.notNil) {off.value (v[0], v[1], v[2], v[3])};
+				n = msg.size;
+				if(n==0) {
+					if(idle.notNil) {idle.value(time);};
 				};
-			};
 
-			// search for new blobs
-			new_blobs do: {|v|
-				if (old_blobs[v[1]].isNil) {
-					if(on.notNil) {on.value (v[0], v[1], v[2], v[3], v[4], v[5])};
-				}
-				{	
-					if(set.notNil) {set.value (v[0], v[1], v[2], v[3], v[4], v[5])};
+				// search for disappeard blobs
+				old_blobs do: {|v|
+					if(msg.indexOf(v).isNil) {
+						if(off.notNil) {off.valueArray(blobs[v])};
+						blobs.removeAt(v);
+					}
 				};
-			};
 
-			tmp = old_blobs;
-			old_blobs = new_blobs;
-			new_blobs = tmp.clear;
+				// search for new blobs
+				msg do: {|v|
+					if(old_blobs.indexOf(v).isNil) {
+						if(on.notNil) {on.valueArray(blobs[v])};
+					} {
+						if(set.notNil) {set.valueArray(blobs[v])};
+					};
+				};
+
+				if(end.notNil) {end.value(time)};
+
+				old_blobs = msg;
+			};
 		}, "/tuio2/alv", rx);
 
-		on = nil;
-		off = nil;
-		set = nil;
+		start = nil;	// {|time| };
+		end = nil;		// {|time| };
+		on = nil;			// {|time, sid, pid, gid, x, z| ["Tuio2 ON:", time, sid, pid, gid, x, z].postln;};
+		off = nil;		// {|time, sid, pid, gid| ["Tuio2 OFF:", time, sid, pid, gid].postln;};
+		set = nil; 		// {|time, sid, pid, gid, x, z| ["Tuio2 SET:", time, sid, pid, gid, x, z].postln;};
+		idle = nil;		// {|time| ["Tuio2 IDLE:", time].postln;};
 	}
 
 	init {|s, iRx|

@@ -38,7 +38,7 @@ ChimaeraConf {
 	initConn {|iTx, iRx|
 		tx = iTx;
 		rx = iRx;
-		cb = Dictionary.new;
+		cb = Order.new;
 		count = 0;
 
 		success = OSCFunc({|msg, time, addr, port|
