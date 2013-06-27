@@ -33,21 +33,6 @@ s.doWhenBooted({
 	var inst, txrx, chimconf, baseID, leadID, stompotto, baseInst, leadInst, looper, loadInst;
 
 	/*
-	 * load instrument
-	 */
-	loadInst = {|group, groupID, inst|
-		( type: \off,
-			id: groupID,
-		).play;
-
-		{s.sync}.fork;
-
-		("../instruments/"++inst++".sc").load.value(group);
-
-		{s.sync}.fork;
-	};
-
-	/*
 	 * Chimaera
 	 */
 	thisProcess.openUDPPort(4444);
@@ -65,8 +50,6 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/output/offset", 0.001); // add 1ms offset to bundle timestamps
 
 	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
-	chimconf.sendMsg("/chimaera/scsynth/instrument", \lead); // set scsynth instrument name
-	chimconf.sendMsg("/chimaera/scsynth/prealloc", false); // use dynamic mode of scsynth output engine
 	chimconf.sendMsg("/chimaera/scsynth/offset", 1000); // offset of new synthdef ids
 	chimconf.sendMsg("/chimaera/scsynth/modulo", 8000); // modulo of new synthdef ids
 	// id numbers on device will cycle linearly from offset to (offset+modulo) circularly
@@ -74,23 +57,25 @@ s.doWhenBooted({
 	baseID = 0;
 	leadID = 1;
 
-	baseInst = [
-		"analog",
-		"syncsaw",
-		"sine",
-		"grain",
-		"pluck",
-		"blip"
-	];
+	/*
+	 * populate instrument name arrays
+	 */
+	baseInst = Array.new(32);
+	leadInst = Array.new(32);
+	p = PathName("../instruments");
+	p.filesDo({|n|
+		var name = n.fileNameWithoutExtension;
+		baseInst.add(name);
+		leadInst.add(name);
+	});
 
-	leadInst = [
-		"analog",
-		"syncsaw",
-		"sine",
-		"grain",
-		"pluck",
-		"blip"
-	];
+	/*
+	 * load instrument
+	 */
+	loadInst = {|group, groupID, inst|
+		s.sendMsg(\n_set, groupID, 'gate', 0);
+		("../instruments/"++inst++".sc").load.value(group);
+	};
 
 	"../templates/two_groups_separate.sc".load.value(baseID, leadID);
 	//"../templates/two_groups.sc".load.value(baseID, leadID);
