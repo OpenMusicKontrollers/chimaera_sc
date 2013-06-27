@@ -42,7 +42,6 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/output/offset", 0.001); // add 1ms offset to bundle timestamps
 
 	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
-	chimconf.sendMsg("/chimaera/scsynth/instrument", \lead); // set scsynth instrument name
 	chimconf.sendMsg("/chimaera/scsynth/prealloc", false); // use dynamic mode of scsynth output engine
 	chimconf.sendMsg("/chimaera/scsynth/offset", 1000); // offset of new synthdef ids
 	chimconf.sendMsg("/chimaera/scsynth/modulo", 8000); // modulo of new synthdef ids
@@ -51,11 +50,15 @@ s.doWhenBooted({
 	baseID = 0;
 	leadID = 1;
 
-	"../templates/two_groups.sc".load.value(baseID, leadID);
-	"../instruments/blip.sc".load.value(\base);
-	"../instruments/blip.sc".load.value(\lead);
+	"../templates/two_groups_separate.sc".load.value(baseID, leadID);
+	"../instruments/sine.sc".load.value(\base);
+	"../instruments/sine.sc".load.value(\lead);
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
 	chimconf.sendMsg("/chimaera/group/set", baseID, \base, ChimaeraConf.north, 0.0, 1.0); // add group
 	chimconf.sendMsg("/chimaera/group/set", leadID, \lead, ChimaeraConf.south, 0.0, 1.0); // add group
-})
+});
+
+o = OSCFunc({ arg msg, time;
+    [time, msg].postln;
+},'/tr', s.addr);
