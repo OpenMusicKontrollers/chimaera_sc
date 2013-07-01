@@ -40,9 +40,11 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/output/enabled", true); // enable output socket on device
 	chimconf.sendMsg("/chimaera/output/address", "192.168.1.10:57110"); // send to scsynth port
 	chimconf.sendMsg("/chimaera/output/offset", 0.001); // add 1ms offset to bundle timestamps
+	chimconf.sendMsg("/chimaera/output/reset"); // reset all output engines
+
+	chimconf.sendMsg("/chimaera/interpolation/order", 3); // cubic interpolation
 
 	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
-	chimconf.sendMsg("/chimaera/scsynth/prealloc", false); // use dynamic mode of scsynth output engine
 	chimconf.sendMsg("/chimaera/scsynth/offset", 1000); // offset of new synthdef ids
 	chimconf.sendMsg("/chimaera/scsynth/modulo", 8000); // modulo of new synthdef ids
 	// id numbers on device will cycle linearly from offset to (offset+modulo) circularly

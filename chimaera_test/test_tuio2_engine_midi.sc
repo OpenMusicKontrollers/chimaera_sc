@@ -34,6 +34,7 @@
 	chimconf.sendMsg("/chimaera/output/enabled", true); // enable output
 	chimconf.sendMsg("/chimaera/output/address", "192.168.1.10:3333"); // send output stream to port 3333
 	chimconf.sendMsg("/chimaera/output/offset", 0.0012); // add 1.2ms offset to bundle timestamps
+	chimconf.sendMsg("/chimaera/output/reset"); // reset all output engines
 
 	chimconf.sendMsg("/chimaera/tuio/enabled", true); // enable Tuio output engine
 	chimconf.sendMsg("/chimaera/tuio/long_header", false); // use short Tuio frame header (default)
