@@ -53,8 +53,8 @@ s.doWhenBooted({
 	leadID = 1;
 
 	"../templates/two_groups_separate.sc".load.value(baseID, leadID);
-	"../instruments/sine.sc".load.value(\base);
-	"../instruments/sine.sc".load.value(\lead);
+	"../instruments/anabase.sc".load.value(\base);
+	"../instruments/anabase.sc".load.value(\lead);
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
 	chimconf.sendMsg("/chimaera/group/set", baseID, \base, ChimaeraConf.north, 0.0, 1.0); // add group
