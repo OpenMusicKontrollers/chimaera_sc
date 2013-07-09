@@ -56,30 +56,26 @@
 	midio.latency = 0; // send MIDI with no delay, instantaneously
 
 	note_on = OSCFunc({|msg, time, addr, port|
-		SystemClock.schedAbs(time, {
-			midio.noteOn(msg[1], msg[2], msg[3]);
-		});
+		midio.latency = time - SystemClock.beats;
+		midio.noteOn(msg[1], msg[2], msg[3]);
 	}, "/midi/note_on", rx);
 
 	note_off = OSCFunc({|msg, time, addr, port|
-		SystemClock.schedAbs(time, {
-			midio.noteOff(msg[1], msg[2], msg[3]);
-		});
+		midio.latency = time - SystemClock.beats;
+		midio.noteOff(msg[1], msg[2], msg[3]);
 	}, "/midi/note_off", rx);
 
 	pitch_bend = OSCFunc({|msg, time, addr, port|
-		SystemClock.schedAbs(time, {
-			midio.bend(msg[1], msg[2]);
-		});
+		midio.latency = time - SystemClock.beats;
+		midio.bend(msg[1], msg[2]);
 	}, "/midi/pitch_bend", rx);
 
 	control_change = OSCFunc({|msg, time, addr, port|
-		SystemClock.schedAbs(time, {
-			if(msg.size == 4) {
-				midio.control(msg[1], msg[2], msg[3]);
-			} {
-				midio.control(msg[1], msg[2]);
-			};
-		});
+		midio.latency = time - SystemClock.beats;
+		if(msg.size == 4) {
+			midio.control(msg[1], msg[2], msg[3]);
+		} {
+			midio.control(msg[1], msg[2]);
+		};
 	}, "/midi/control_change", rx);
 }.value;

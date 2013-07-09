@@ -58,6 +58,14 @@
 	lookup = Order.new; // lookup table of currently active keys
 	effect = 0x07; // volume
 
+	chimtuio2.start = { |time|
+		midio.latency = time - SystemClock.beats;
+	};
+
+	chimtuio2.end = { |time|
+		midio.latency = 0;
+	};
+
 	chimtuio2.on = { |time, sid, pid, gid, x, z| // set callback function for blob on-events
 		var midikey, cc;
 		midikey = x*48+24;
@@ -65,20 +73,16 @@
 
 		//(time-SystemClock.beats).postln; //uncomment this to check whether there are late messages (if so, adjust the offset on the device)
 
-		SystemClock.schedAbs(time, {
-			lookup[sid] = midikey.round;
-			midio.noteOn(gid, lookup[sid], 0x7f); // we're using the group id (gid) as MIDI channel number
-			midio.bend(gid, midikey-lookup[sid]/48*0x2000+0x2000); // we're using a pitchbend span of 4800 cents
-			midio.control(gid, effect | 0x20, cc & 0x7f); // effect LSB
-			midio.control(gid, effect | 0x00, cc >> 7); // effect MSB
-		});
+		lookup[sid] = midikey.round;
+		midio.noteOn(gid, lookup[sid], 0x7f); // we're using the group id (gid) as MIDI channel number
+		midio.bend(gid, midikey-lookup[sid]/48*0x2000+0x2000); // we're using a pitchbend span of 4800 cents
+		midio.control(gid, effect | 0x20, cc & 0x7f); // effect LSB
+		midio.control(gid, effect | 0x00, cc >> 7); // effect MSB
 	};
 
 	chimtuio2.off = { |time, sid, pid, gid| // set callback function for blob off-events
-		SystemClock.schedAbs(time, {
-			midio.noteOff(gid, lookup[sid], 0x00);
-			lookup[sid] = nil;
-		});
+		midio.noteOff(gid, lookup[sid], 0x00);
+		lookup[sid] = nil;
 	};
 
 	chimtuio2.set = { |time, sid, pid, gid, x, z| // set callback function for blob set-events
@@ -86,17 +90,13 @@
 		midikey = x*48+24;
 		cc = (z*0x3fff).asInteger;
 
-		SystemClock.schedAbs(time, {
-			midio.bend(gid, midikey-lookup[sid]/48*0x2000+0x2000); // we're using a pitchbend span of 4800 cents
-			midio.control(gid, effect | 0x20, cc & 0x7f); // effect LSB
-			midio.control(gid, effect | 0x00, cc >> 7); // effect MSB
-		});
+		midio.bend(gid, midikey-lookup[sid]/48*0x2000+0x2000); // we're using a pitchbend span of 4800 cents
+		midio.control(gid, effect | 0x20, cc & 0x7f); // effect LSB
+		midio.control(gid, effect | 0x00, cc >> 7); // effect MSB
 	};
 
 	chimtuio2.idle = { |time|
-		SystemClock.schedAbs(time, {
-			midio.allNotesOff(baseID);
-			midio.allNotesOff(leadID);
-		});
+		midio.allNotesOff(baseID);
+		midio.allNotesOff(leadID);
 	};
 }.value;
