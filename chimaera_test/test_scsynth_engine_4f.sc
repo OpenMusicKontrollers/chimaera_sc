@@ -30,7 +30,7 @@ s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var inst, txrx, chimconf, instruments, baseID, leadID;
+	var inst, txrx, chimconf, instruments, modID, pitchID, busX, busY;
 
 	thisProcess.openUDPPort(4444);
 	txrx = NetAddr ("chimaera.local", 4444);
@@ -49,14 +49,18 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/scsynth/modulo", 8000); // modulo of new synthdef ids
 	// id numbers on device will cycle linearly from offset to (offset+modulo) circularly
 
-	baseID = 0;
-	leadID = 1;
+	modID = 0;
+	pitchID = 1;
 
-	"../templates/two_groups_separate.sc".load.value(baseID, leadID);
-	"../instruments/anabase.sc".load.value(\base);
-	"../instruments/anabase.sc".load.value(\lead);
+	busX = Bus.control(s, 1);
+	busY = Bus.control(s, 1);
+
+	"../templates/single_group.sc".load.value(modID);
+	"../instruments/pluck_4f.sc".load.value(\mod, \pitch, busX, busY);
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group/set", baseID, \base, ChimaeraConf.north, 0.0, 1.0); // add group
-	chimconf.sendMsg("/chimaera/group/set", leadID, \lead, ChimaeraConf.south, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", modID, \mod, ChimaeraConf.north, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", pitchID, \pitch, ChimaeraConf.south, 0.0, 1.0); // add group
+
+	busY.scope;
 });

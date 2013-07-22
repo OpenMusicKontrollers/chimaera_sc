@@ -1,7 +1,7 @@
 #!/usr/bin/sclang
 
 /*
- * Copyright (c) 2012-2013 Hanspeter Portner (agenthp@users.sf.net)
+ * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -42,7 +42,7 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/output/offset", 0.001); // add 1ms offset to bundle timestamps
 	chimconf.sendMsg("/chimaera/output/reset"); // reset all output engines
 
-	chimconf.sendMsg("/chimaera/interpolation/order", 3); // cubic interpolation
+	chimconf.sendMsg("/chimaera/interpolation/order", 2); // cubic interpolation
 
 	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
 	chimconf.sendMsg("/chimaera/scsynth/offset", 1000); // offset of new synthdef ids
