@@ -21,15 +21,10 @@
  *     distribution.
  */
 
-{|baseID|
+{|baseGrp|
 
-	// create groups in scsynth via events
-	(
-		type: \group,
-		id: baseID,
-		group: 0, // as child of root group
-		out: 0
-	).play;
+	s.sendMsg('/g_new', baseGrp, \addToHead.asInt, 0);
+	s.sync;
 
 	s.sync;
 }

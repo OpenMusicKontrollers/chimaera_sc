@@ -21,19 +21,22 @@
  *     distribution.
  */
 
-{|synthname, busX, busY|
+{|synthname|
 
-	SynthDef(synthname, {|freq=0, amp=0, p=0, gate=0, out=0|
-		var up=0.1, down=0.5, env, suicide;
+	SynthDef(synthname, {|freq=0, amp=0, p=0, freq1=0, amp1=0, p1=0, gate=0, out=0|
+		var up=0.1, down=0.5, env, suicide, sig, x, y;
 
 		suicide = DetectSilence.kr(Line.kr(0.1, 0.0, 1.0)+gate, 0.0001, down, doneAction:2);
 		env = Linen.kr(gate, up, 1.0, down);
 
-		freq = freq - Lag.kr(freq, 1); // differentiate
-		freq = freq.abs * 2;
-		freq = freq * env;
-		amp = amp * env;
+		freq = LinExp.kr(freq, 0, 1, (3*12-0.5).midicps, (7*12+0.5).midicps);
 
-		Out.kr([busX, busY], [freq, amp]);
+		freq1 = freq1 - OnePole.kr(freq1, 0.999); // differentiate
+		freq1 = freq1.abs.tan;
+
+		sig = Mix.ar(Saw.ar([freq, freq/3, freq*5], mul:freq1*env));
+		sig = RLPF.ar(sig, amp*900+100, 0.1);
+
+		OffsetOut.ar(out, sig);
 	}).add;
 }

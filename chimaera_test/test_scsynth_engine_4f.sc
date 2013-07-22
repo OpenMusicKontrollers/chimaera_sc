@@ -30,7 +30,7 @@ s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var inst, txrx, chimconf, instruments, modID, pitchID, busX, busY;
+	var inst, txrx, chimconf, instruments, baseOut, leadOut, baseGrp, leadGrp;
 
 	thisProcess.openUDPPort(4444);
 	txrx = NetAddr ("chimaera.local", 4444);
@@ -44,23 +44,17 @@ s.doWhenBooted({
 
 	chimconf.sendMsg("/chimaera/interpolation/order", 2); // cubic interpolation
 
-	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
-	chimconf.sendMsg("/chimaera/scsynth/offset", 1000); // offset of new synthdef ids
-	chimconf.sendMsg("/chimaera/scsynth/modulo", 8000); // modulo of new synthdef ids
-	// id numbers on device will cycle linearly from offset to (offset+modulo) circularly
+	baseOut = 0;
+	baseGrp = 100 + baseOut;
 
-	modID = 0;
-	pitchID = 1;
-
-	busX = Bus.control(s, 1);
-	busY = Bus.control(s, 1);
-
-	"../templates/single_group.sc".load.value(modID);
-	"../instruments/pluck_4f.sc".load.value(\mod, \pitch, busX, busY);
+	"../templates/single_group.sc".load.value(baseGrp);
+	"../instruments/cello_4f.sc".load.value(\base);
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group/set", modID, \mod, ChimaeraConf.north, 0.0, 1.0); // add group
-	chimconf.sendMsg("/chimaera/group/set", pitchID, \pitch, ChimaeraConf.south, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", 0, ChimaeraConf.north, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", 1, ChimaeraConf.south, 0.0, 1.0); // add group
 
-	busY.scope;
+	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
+	chimconf.sendMsg("/chimaera/scsynth/group", 0, \lead, 200, leadGrp, baseOut, 3, false, false, \addToHead.asInt, true);
+	chimconf.sendMsg("/chimaera/scsynth/group", 1, \base, 200, baseGrp, baseOut, 0, true, true, \addToHead.asInt, false);
 });

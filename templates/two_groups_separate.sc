@@ -21,23 +21,10 @@
  *     distribution.
  */
 
-{
-	arg baseID, leadID;
+{|baseGrp, leadGrp|
 
-	// create groups in scsynth via events
-	(
-		type: \group,
-		id: baseID,
-		group: 0, // as child of root group
-		out: baseID
-	).play;
-
-	(
-		type: \group,
-		id: leadID,
-		group: 0, // as child of root group
-		out: leadID
-	).play;
+	s.sendMsg('/g_new', baseGrp, \addToHead.asInt, 0);
+	s.sendMsg('/g_new', leadGrp, \addToHead.asInt, 0);
 
 	s.sync;
 }

@@ -30,7 +30,7 @@ s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var inst, txrx, chimconf, instruments, baseID, leadID;
+	var inst, txrx, chimconf, instruments, baseOut, leadOut, baseGrp, leadGrp;
 
 	thisProcess.openUDPPort(4444);
 	txrx = NetAddr ("chimaera.local", 4444);
@@ -43,20 +43,21 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/output/reset"); // reset all output engines
 
 	chimconf.sendMsg("/chimaera/interpolation/order", 2); // cubic interpolation
+	
+	baseOut = 0;
+	leadOut = 1;
+	baseGrp = 100 + baseOut;
+	leadGrp = 100 + leadOut;
 
-	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
-	chimconf.sendMsg("/chimaera/scsynth/offset", 1000); // offset of new synthdef ids
-	chimconf.sendMsg("/chimaera/scsynth/modulo", 8000); // modulo of new synthdef ids
-	// id numbers on device will cycle linearly from offset to (offset+modulo) circularly
-
-	baseID = 0;
-	leadID = 1;
-
-	"../templates/two_groups_separate.sc".load.value(baseID, leadID);
+	"../templates/two_groups_separate.sc".load.value(baseGrp, leadGrp);
 	"../instruments/anabase.sc".load.value(\base);
 	"../instruments/anabase.sc".load.value(\lead);
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group/set", baseID, \base, ChimaeraConf.north, 0.0, 1.0); // add group
-	chimconf.sendMsg("/chimaera/group/set", leadID, \lead, ChimaeraConf.south, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", 0, ChimaeraConf.north, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", 1, ChimaeraConf.south, 0.0, 1.0); // add group
+
+	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
+	chimconf.sendMsg("/chimaera/scsynth/group", 0, \base, 200, baseGrp, baseOut, 0, true, true, \addToHead.asInt, false);
+	chimconf.sendMsg("/chimaera/scsynth/group", 1, \lead, 200, leadGrp, leadOut, 0, true, true, \addToHead.asInt, false);
 });

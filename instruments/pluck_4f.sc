@@ -30,26 +30,20 @@
  * - coef
  */
 
-{|modname, pitchname, busX, busY|
-	busX.set(1.0);
-	busY.set(0.2);
+{|synthname|
 
-	SynthDef(modname, {|freq=0, amp=0, p=0, gate=0, out=0|
-		var suicide, up=0.1, down=1.0;
-
-		suicide = DetectSilence.kr(Line.kr(0.1, 0.0, 1.0)+gate, 0.0001, down, doneAction:2);
-
-		Out.kr([busX, busY], [freq*9+1, amp*0.5]);
-	}).add;
-
-	SynthDef(pitchname, {|freq=0, amp=0, p=0, gate=0, out=0|
-		var suicide, up=0.1, down=1.0, env, sig;
+	SynthDef(synthname, {|freq=0, amp=0, p=0, freq1=0, amp1=0, p1=0, gate=0, out=0|
+		var suicide, up=0.1, down=5.0, env, sig;
 
 		suicide = DetectSilence.kr(Line.kr(0.1, 0.0, 1.0)+gate, 0.0001, down, doneAction:2);
 		env = Linen.kr(gate, up, 1.0, down);
 
 		freq = LinExp.kr(freq, 0, 1, (3*12-0.5).midicps, (7*12+0.5).midicps);
-		sig = Pluck.ar(WhiteNoise.ar(0.1), gate, 1, freq.reciprocal, 10.0, 0.2, mul:env*amp);
+		freq1 = 1 - freq1 * 0.5;
+		amp1 = LinExp.kr(amp1, 0, 1, (1*12-0.5).midicps, (11*12+0.5).midicps);
+
+		sig = Pluck.ar(WhiteNoise.ar(0.1), gate, 1, freq.reciprocal, 10, freq1, mul:env*amp);
+		sig = RLPF.ar(sig, amp1, 0.1);
 
 		OffsetOut.ar(out, sig);
 	}).add;
