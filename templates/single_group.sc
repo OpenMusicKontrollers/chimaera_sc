@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 Hanspeter Portner (agenthp@users.sf.net)
+ * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,7 +24,6 @@
 {|baseGrp|
 
 	s.sendMsg('/g_new', baseGrp, \addToHead.asInt, 0);
-	s.sync;
 
 	s.sync;
 }

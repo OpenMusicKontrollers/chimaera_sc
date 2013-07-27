@@ -29,7 +29,7 @@ s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var rx, tx, chimconf, chimtuio2, instruments, baseID, leadID, bndl;
+	var rx, tx, chimconf, chimtuio2, instruments, baseOut, leadOut, baseGrp, leadGrp, bndl;
 
 	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
 	tx = NetAddr ("chimaera.local", 4444);
@@ -41,24 +41,25 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/output/offset", 0.002); // add 1ms offset to bundle timestamps
 	chimconf.sendMsg("/chimaera/output/reset"); // reset all output engines
 
-	chimconf.sendMsg("/chimaera/tuio/enabled", true); // enable Tuio output engine
-	chimconf.sendMsg("/chimaera/tuio/long_header", false); // use short Tuio frame header (default)
-
-	baseID = 0;
-	leadID = 1;
-
-	"../templates/two_groups.sc".load.value(baseID, leadID);
-	"../instruments/sine.sc".load.value(\base);
-	"../instruments/sine.sc".load.value(\lead);
+	baseOut = 0;
+	leadOut = 1;
+	baseGrp = 100 + baseOut;
+	leadGrp = 100 + leadOut;
 
 	// create groups in sclang
 	instruments = Order.new;
-	instruments[baseID] = \base;
-	instruments[leadID] = \lead;
+	instruments[baseOut] = \base;
+	instruments[leadOut] = \lead;
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group/set", baseID, \base, ChimaeraConf.north, 0.0, 1.0); // add group
-	chimconf.sendMsg("/chimaera/group/set", leadID, \lead, ChimaeraConf.south, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", baseOut, ChimaeraConf.north, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", leadOut, ChimaeraConf.south, 0.0, 1.0); // add group
+
+	chimconf.sendMsg("/chimaera/tuio/enabled", true); // enable Tuio output engine
+	chimconf.sendMsg("/chimaera/tuio/long_header", false); // use short Tuio frame header (default)
+
+	"../templates/two_groups_separate.sc".load.value(baseOut, leadOut, baseGrp, leadGrp);
+	"scsynth_instrument_chooser.sc".load.value();
 
 	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
 	rx = NetAddr ("chimaera.local", 3333);
@@ -113,7 +114,7 @@ s.doWhenBooted({
 		lag = time - SystemClock.beats;
 
 		s.sendBundle(lag,
-			['/n_set', baseID, 'gate', 0],
-			['/n_set', leadID, 'gate', 0]);
+			['/n_set', baseOut, 'gate', 0],
+			['/n_set', leadOut, 'gate', 0]);
 		};
 })

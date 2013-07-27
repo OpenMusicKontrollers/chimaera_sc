@@ -49,15 +49,14 @@ s.doWhenBooted({
 	baseGrp = 100 + baseOut;
 	leadGrp = 100 + leadOut;
 
-	"../templates/two_groups_separate.sc".load.value(baseGrp, leadGrp);
-	"../instruments/anabase.sc".load.value(\base);
-	"../instruments/anabase.sc".load.value(\lead);
-
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group/set", 0, ChimaeraConf.north, 0.0, 1.0); // add group
-	chimconf.sendMsg("/chimaera/group/set", 1, ChimaeraConf.south, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", baseOut, ChimaeraConf.north, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", leadOut, ChimaeraConf.south, 0.0, 1.0); // add group
 
 	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
-	chimconf.sendMsg("/chimaera/scsynth/group", 0, \base, 200, baseGrp, baseOut, 0, true, true, \addToHead.asInt, false);
-	chimconf.sendMsg("/chimaera/scsynth/group", 1, \lead, 200, leadGrp, leadOut, 0, true, true, \addToHead.asInt, false);
+	chimconf.sendMsg("/chimaera/scsynth/group", baseOut, \base, 200, baseGrp, baseOut, 0, true, true, \addToHead.asInt, false);
+	chimconf.sendMsg("/chimaera/scsynth/group", leadOut, \lead, 200, leadGrp, leadOut, 0, true, true, \addToHead.asInt, false);
+
+	"../templates/two_groups_separate.sc".load.value(baseOut, leadOut, baseGrp, leadGrp);
+	"scsynth_instrument_chooser.sc".load.value();
 });

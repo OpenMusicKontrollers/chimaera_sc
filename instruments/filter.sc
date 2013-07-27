@@ -21,29 +21,18 @@
  *     distribution.
  */
 
-/*
- * plucked instrument
- *
- * x := frequency
- * z := volume, distortion, cutoff frequency of low-pass filter
- */
-
 {|synthname|
 
-	SynthDef(synthname, {|freq=0, amp=0, p=0, gate=0, out=0|
-		var suicide, up=0.1, down=1.0, env, sig, vol, cut;
+	SynthDef(synthname, {|freq=0, amp=0, p=0, gate=1, out=0|
+		var suicide, up=0.1, down=0.5, env, sig, cutoff;
 
 		suicide = DetectSilence.kr(Line.kr(0.1, 0.0, 1.0)+gate, 0.0001, down, doneAction:2);
 		env = Linen.kr(gate, up, 1.0, down);
 
-		freq = LinExp.kr(freq, 0, 1, (3*12-0.5).midicps, (7*12+0.5).midicps);
+		amp = LinExp.kr(amp, 0, 1, (2*12-0.5).midicps, (10*12+0.5).midicps);
 
-		vol = LinExp.kr(amp, 0.0, 1.0, 0.5, 1.0);
-		sig = Pluck.ar(WhiteNoise.ar(0.1), gate, 1, freq.reciprocal, 10, 0.20);
-		sig = (sig*amp*1000).distort;
-		sig = FreeVerb.ar(sig, mix:0.8, room:0.5, damp:0.1, mul:vol*env);
-		cut = LinExp.kr(amp, 0.0, 1.0, 500, 1000);
-		sig = RLPF.ar(sig, freq:cut, rq:0.3);
+		sig = AudioIn.ar(out+1);
+		sig = RLPF.ar(sig, amp, 0.2);
 		OffsetOut.ar(out, sig);
 	}).add;
 }

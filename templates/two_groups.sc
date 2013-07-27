@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 Hanspeter Portner (agenthp@users.sf.net)
+ * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,21 +21,11 @@
  *     distribution.
  */
 
-{
-	arg baseID, leadID;
+{ | baseOut, leadOut, baseGrp, leadGrp|
 
 	// create groups in scsynth via events
-	(
-		type: \group,
-		id: baseID,
-		group: 0 // as child of root group
-	).play;
-
-	(
-		type: \group,
-		id: leadID,
-		group: 0 // as child of root group
-	).play;
+	s.sendMsg('/g_new', baseGrp, \addToHead.asInt, 0);
+	s.sendMsg('/g_new', leadGrp, \addToHead.asInt, 0);
 
 	SynthDef(\gain, {|amp=0, pan=0, out=0| // define our synth
 		var sig;
@@ -45,8 +35,8 @@
 
 	SynthDef(\pan, { // define our synth
 		var base, lead, sig;
-		base = In.ar(baseID);
-		lead = In.ar(leadID);
+		base = In.ar(baseOut);
+		lead = In.ar(leadOut);
 		base = Pan2.ar(base, -0.5, 0.3);
 		lead = Pan2.ar(lead, 0.5, 0.3);
 		sig = base + lead;
@@ -60,9 +50,9 @@
 		type: \on,
 		addAction: \addToTail,
 		instrument: \gain,
-		id: baseID+50,
-		group: baseID,
-		out: baseID,
+		id: baseGrp+50,
+		group: baseGrp,
+		out: baseOut,
 		amp: 0.5
 	).play;
 
@@ -70,9 +60,9 @@
 		type: \on,
 		addAction: \addToTail,
 		instrument: \gain,
-		id: leadID+50,
-		group: leadID,
-		out: leadID,
+		id: leadGrp+50,
+		group: leadGrp,
+		out: leadOut,
 		amp: 1.0
 	).play;
 
