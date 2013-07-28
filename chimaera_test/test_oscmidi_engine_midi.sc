@@ -24,7 +24,7 @@
  */
 
 {
-	var rx, tx, chimconf, chimtuio2, midio, baseID, leadID, note_on, note_off, pitch_bend, control_change;
+	var rx, tx, chimconf, chimtuio2, midio, baseID, leadID, func,
 
 	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
 	tx = NetAddr ("chimaera.local", 4444);
@@ -36,16 +36,16 @@
 	chimconf.sendMsg("/chimaera/output/offset", 0.0012); // add 1.2ms offset to bundle timestamps
 	chimconf.sendMsg("/chimaera/output/reset"); // reset all output engines
 
-	chimconf.sendMsg("/chimaera/oscmidi/enabled", true); // enable Tuio output engine
+	chimconf.sendMsg("/chimaera/oscmidi/enabled", true); // enable OSCMidi output engine
 	chimconf.sendMsg("/chimaera/oscmidi/offset", 24); // lowest MIDI Note
 	chimconf.sendMsg("/chimaera/oscmidi/effect", 0x07); // effect corresponding to z-direction
 
-	baseID = 0;
-	leadID = 1;
+	baseGrp = 0;
+	leadGrp = 1;
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group/set", baseID, ChimaeraConf.north, 0.0, 1.0); // add group
-	chimconf.sendMsg("/chimaera/group/set", leadID, ChimaeraConf.south, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", baseGrp, ChimaeraConf.north, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", leadGrp, ChimaeraConf.south, 0.0, 1.0); // add group
 
 	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
 	rx = NetAddr ("chimaera.local", 3333);
@@ -55,27 +55,18 @@
 	midio = MIDIOut(0); // use this on Linux, as patching is usually done via ALSA/JACK
 	midio.latency = 0; // send MIDI with no delay, instantaneously
 
-	note_on = OSCFunc({|msg, time, addr, port|
+	func = OSCFunc({msg, time, addr, port|
 		midio.latency = time - SystemClock.beats;
+		msg.postln;
+		/*
 		midio.noteOn(msg[1], msg[2], msg[3]);
-	}, "/midi/note_on", rx);
-
-	note_off = OSCFunc({|msg, time, addr, port|
-		midio.latency = time - SystemClock.beats;
 		midio.noteOff(msg[1], msg[2], msg[3]);
-	}, "/midi/note_off", rx);
-
-	pitch_bend = OSCFunc({|msg, time, addr, port|
-		midio.latency = time - SystemClock.beats;
 		midio.bend(msg[1], msg[2]);
-	}, "/midi/pitch_bend", rx);
-
-	control_change = OSCFunc({|msg, time, addr, port|
-		midio.latency = time - SystemClock.beats;
 		if(msg.size == 4) {
 			midio.control(msg[1], msg[2], msg[3]);
 		} {
 			midio.control(msg[1], msg[2]);
 		};
-	}, "/midi/control_change", rx);
+		*/
+	}, "/midi", rx);
 }.value;
