@@ -24,7 +24,7 @@
  */
 
 {
-	var rx, tx, chimconf, chimtuio2, midio, baseID, leadID, func,
+	var rx, tx, chimconf, chimtuio2, midio, baseGrp, leadGrp, func;
 
 	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
 	tx = NetAddr ("chimaera.local", 4444);
@@ -55,18 +55,16 @@
 	midio = MIDIOut(0); // use this on Linux, as patching is usually done via ALSA/JACK
 	midio.latency = 0; // send MIDI with no delay, instantaneously
 
-	func = OSCFunc({msg, time, addr, port|
+	func = OSCFunc({|msg, time, addr, port|
 		midio.latency = time - SystemClock.beats;
-		msg.postln;
-		/*
-		midio.noteOn(msg[1], msg[2], msg[3]);
-		midio.noteOff(msg[1], msg[2], msg[3]);
-		midio.bend(msg[1], msg[2]);
-		if(msg.size == 4) {
-			midio.control(msg[1], msg[2], msg[3]);
-		} {
-			midio.control(msg[1], msg[2]);
-		};
-		*/
+		msg.removeAt(0); // remove path
+		msg.do({|m|
+			switch(0x100 + m[1], // int8 -> uint8
+				0x90, {midio.noteOn(m[0], m[2], m[3])},
+				0x80, {midio.noteOff(m[0], m[2], m[3])},
+				0xe0, {midio.bend(m[0], (m[2]<<7) + m[2])},
+				0xb0, {midio.control(m[0], m[2], m[3])}, 
+			);
+		});
 	}, "/midi", rx);
 }.value;
