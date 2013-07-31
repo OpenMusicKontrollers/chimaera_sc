@@ -33,7 +33,7 @@
 
 	chimconf.sendMsg("/chimaera/output/enabled", true); // enable output
 	chimconf.sendMsg("/chimaera/output/address", "192.168.1.10:3333"); // send output stream to port 3333
-	chimconf.sendMsg("/chimaera/output/offset", 0.0012); // add 1.2ms offset to bundle timestamps
+	chimconf.sendMsg("/chimaera/output/offset", 0.001); // add 1.2ms offset to bundle timestamps
 	chimconf.sendMsg("/chimaera/output/reset"); // reset all output engines
 
 	chimconf.sendMsg("/chimaera/oscmidi/enabled", true); // enable OSCMidi output engine
@@ -57,12 +57,13 @@
 
 	func = OSCFunc({|msg, time, addr, port|
 		midio.latency = time - SystemClock.beats;
+		if(midio.latency < 0) {("message late" + midio.latency).postln};
 		msg.removeAt(0); // remove path
 		msg.do({|m|
 			switch(0x100 + m[1], // int8 -> uint8
 				0x90, {midio.noteOn(m[0], m[2], m[3])},
 				0x80, {midio.noteOff(m[0], m[2], m[3])},
-				0xe0, {midio.bend(m[0], (m[2]<<7) + m[2])},
+				0xe0, {midio.bend(m[0], (m[3]<<7) + m[2])},
 				0xb0, {midio.control(m[0], m[2], m[3])}, 
 			);
 		});
