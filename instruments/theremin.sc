@@ -22,7 +22,7 @@
  */
 
 /*
- * simple sine-wave
+ * Theremin
  *
  * x := freq
  * z := volume
@@ -40,6 +40,10 @@
 
 		freq = LinExp.kr(freq, 0, 1, (3*12-0.5).midicps, (7*12+0.5).midicps);
 		sig = SinOsc.ar(freq, mul:amp*env);
+		sig = sig * VarSaw.ar(freq*1.001, 0.2, mul:5);
+		sig = sig.distort;
+		sig = BPF.ar(sig, 500, 0.1, mul:5);
+		sig = FreeVerb.ar(sig, mix:0.3, room:0.8, damp:0.1);
 		OffsetOut.ar(out, sig);
 	}).add;
 }
