@@ -50,8 +50,8 @@
 			var msb, lsb, val;
 			lsb = arr[i*2+1];
 			if(lsb < 0) {lsb = 256+lsb};
-			msb = arr[i*2] * 256;
-			val = msb + lsb;
+			msb = arr[i*2] << 8;
+			val = msb | lsb;
 			val = val / 2048 * 128;
 			if(val < 0) {
 				var red = 1+(val/128);
