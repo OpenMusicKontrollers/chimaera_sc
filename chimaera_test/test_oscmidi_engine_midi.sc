@@ -37,7 +37,8 @@
 	chimconf.sendMsg("/chimaera/output/reset"); // reset all output engines
 
 	chimconf.sendMsg("/chimaera/oscmidi/enabled", true); // enable OSCMidi output engine
-	chimconf.sendMsg("/chimaera/oscmidi/offset", 24); // lowest MIDI Note
+	chimconf.sendMsg("/chimaera/oscmidi/offset", 23.5); // lowest MIDI Note
+	chimconf.sendMsg("/chimaera/oscmidi/range", 48.0); // MIDI Note range
 	chimconf.sendMsg("/chimaera/oscmidi/effect", 0x07); // effect corresponding to z-direction
 
 	baseGrp = 0;
