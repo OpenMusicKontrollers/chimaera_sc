@@ -39,7 +39,7 @@ ChimaeraConf {
 		tx = iTx;
 		rx = iRx;
 		cb = Order.new;
-		count = 0;
+		count = 1000.rand;
 
 		success = OSCFunc({|msg, time, addr, port|
 			var id;
@@ -66,13 +66,14 @@ ChimaeraConf {
 		if (cb[id].isFunction) {
 			cb[id].value(msg);
 		};
-		cb[id] = nil;
+		cb.removeAt(id);
+		("Chimaera request #"++id+"succeeded:").postln;
 	}
 
 	fail {|id, msg|
 		if (cb[id].notNil) {
-			("ChimaeraConf request failed:" + msg[0]).postln;
-			cb[id] = nil;
+			cb.removeAt(id);
+			("Chimaera request #"++id+"failed:" + msg[0]).postln;
 		};
 	}
 
@@ -89,8 +90,8 @@ ChimaeraConf {
 		tx.performList(\sendMsg, path, count, args);
 
 		// send timeout to ourselfs
-		SystemClock.sched(1, {
-			this.fail(count, ["timeout"])
+		AppClock.sched(1, {
+			this.fail(count, ["timed out"])
 		});
 
 		count = count + 1;
