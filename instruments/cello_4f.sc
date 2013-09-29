@@ -31,8 +31,8 @@
 
 		freq = LinExp.kr(freq, 0, 1, (3*12-0.5).midicps, (7*12+0.5).midicps);
 
-		freq1 = freq1 - OnePole.kr(freq1, 0.999); // differentiate
-		freq1 = freq1.abs.tan;
+		freq1 = freq1 - OnePole.kr(freq1, 0.998); // differentiate
+		freq1 = RunningSum.kr(freq1.abs.tan, 20)*0.05;
 
 		sig = Mix.ar(Saw.ar([freq, freq/3, freq*5], mul:freq1*env));
 		sig = RLPF.ar(sig, amp*900+100, 0.1);

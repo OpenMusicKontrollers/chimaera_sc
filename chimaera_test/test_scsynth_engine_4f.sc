@@ -45,16 +45,18 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/interpolation/order", 2); // cubic interpolation
 
 	baseOut = 0;
+	leadOut = 1;
 	baseGrp = 100 + baseOut;
+	leadGrp = 100 + leadOut;
+
+	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
+	chimconf.sendMsg("/chimaera/group/set", baseOut, ChimaeraConf.north, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", leadOut, ChimaeraConf.south, 0.0, 1.0); // add group
+
+	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
+	chimconf.sendMsg("/chimaera/scsynth/group", baseOut, \base, 200, baseGrp, baseOut, 0, true, true, \addToHead.asInt, false);
+	chimconf.sendMsg("/chimaera/scsynth/group", leadOut, \lead, 200, baseGrp, leadOut, 3, false, false, \addToHead.asInt, true);
 
 	"../templates/single_group.sc".load.value(baseGrp);
 	"../instruments/cello_4f.sc".load.value(\base);
-
-	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group/set", 0, ChimaeraConf.north, 0.0, 1.0); // add group
-	chimconf.sendMsg("/chimaera/group/set", 1, ChimaeraConf.south, 0.0, 1.0); // add group
-
-	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
-	chimconf.sendMsg("/chimaera/scsynth/group", 0, \lead, 200, leadGrp, baseOut, 3, false, false, \addToHead.asInt, true);
-	chimconf.sendMsg("/chimaera/scsynth/group", 1, \base, 200, baseGrp, baseOut, 0, true, true, \addToHead.asInt, false);
 });

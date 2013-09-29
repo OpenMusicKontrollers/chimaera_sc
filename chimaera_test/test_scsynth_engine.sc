@@ -43,7 +43,7 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/output/reset"); // reset all output engines
 
 	chimconf.sendMsg("/chimaera/interpolation/order", 2); // cubic interpolation
-	
+
 	baseOut = 0;
 	leadOut = 1;
 	baseGrp = 100 + baseOut;
