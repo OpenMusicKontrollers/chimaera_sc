@@ -24,7 +24,7 @@
  */
 
 {
-	var rx, tx, chimconf, chimdump;
+	var rx, tx, chimconf, chimdump, chimcal;
 
 	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
 	tx = NetAddr("chimaera.local", 4444);
@@ -40,4 +40,5 @@
 	chimconf.sendMsg("/chimaera/output/reset"); // reset all output engines
 
 	chimdump = ChimaeraDump(s, chimconf, rx);
+	chimcal = ChimaeraCal(s, chimconf);
 }.value;
