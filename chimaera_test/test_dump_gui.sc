@@ -41,6 +41,8 @@
 
 	chimconf.sendMsg("/chimaera/dump/enabled", true); // enable sensor array dump
 
+	chimconf.sendMsg("/chimaera/calibration/reset"); // reset calibration data
+
 	chimconf.sendMsg("/chimaera/sensors", {|n|
 		var geo;
 		var h = 100;
@@ -49,6 +51,7 @@
 		var w2 = w - 2;
 		var m = 2200;
 		var d = 2048 / m * h;
+		var t = 2040 / m * h;
 		var s = 1 / m * h;
 		var p0, p1, p2, p3;
 
@@ -77,7 +80,7 @@
 					msb = arr[i*2] << 8;
 					val = msb | lsb;
 					val = val * s;
-					if(val.abs >= d) {
+					if(val.abs >= t) {
 						Pen.fillColor = Color.yellow;
 					} {
 						if(val < 0) {
