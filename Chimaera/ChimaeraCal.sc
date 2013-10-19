@@ -49,8 +49,6 @@ ChimaeraCal {
 
 		text = StaticText.new(win, Rect(10, 90, 380, 140));
 		text.string = desc[0];
-	
-		//conf.sendMsg("/chimaera/calibration/reset"); // reset all output engines
 
 		acts = [
 			{ conf.sendMsg("/chimaera/calibration/start"); },
