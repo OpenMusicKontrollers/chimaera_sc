@@ -22,7 +22,7 @@
  */
 
 ChimaeraCal {
-	var win, button, text, desc, acts;
+	var win, button, num, text, desc, acts, is;
 
 	*new {|s, conf|
 		^super.new.init(s, conf);
@@ -33,24 +33,40 @@ ChimaeraCal {
 	}
 
 	init {|s, conf|
-		win = Window.new("Chimaera Calibration", Rect(0, 0, 400, 200), false).front;
+		win = Window.new("Chimaera Calibration Wizard", Rect(0, 0, 400, 250), false).front;
 
 		desc = [
-			"Starts calibration procedure",
-			"Determines the quiescent state of each sensor: Do not bring any magnetic source near the sensor array for some seconds and procede.",
-			"Determine the threshold of each sensor: move the magnet at a fixed distance along the sensor array. This distance represents the sensors threshold, e.g. touch events will be triggered only above this threshold. Start left with one polarity, go right, return left, turn the polarity around, go right, return left and procede.",
-			"Determine the sensitivity of each sensor: move the magnet along the sensor array right above the casing. This distance represents the maximal sensor values. Start left with one polarity, go right, return left, turn the polarity around, go right, return left and procede.",
-			"You can now save your calibration data to EEPROM, wo the device will load it at future boots.",
+			"Start calibration procedure",
+			"Determine the quiescent state of each sensor: Do not bring any magnetic source near the sensor array for some seconds and procede.",
+			"Determine the threshold of each sensor: move the magnet at a fixed distance along the sensor array. This distance represents the sensors threshold, e.g. touch events will be triggered only above this threshold. Start left with one polarity, go right, return left, turn the polarity around, go right, return left and procede. This also gathers the first point for the 5-point sensor-distance curve-fit.",
+			"Gather second point for 5-point sensor-distance curve-fit. Move both poles of the magnet at a fixed vicinity y1>0 (e.g. 0.25) over the given sensor only. Fill in your vicinity into the box and procede.",
+			"Gather third point for 5-point sensor-distance curve-fit. Move both poles of the magnet at a fixed vicinity y2>y1 (e.g. 0.5) over the given sensor only. Fill in your vicinity into the box and procede.",
+			"Gather fourth point for 5-point sensor-distance curve-fit. Move both poles of the magnet at a fixed vicinity y3>y2 (e.g. 0.75) over the given sensor only. Fill in your vicinity into the box and procede.",
+			"Gather fithth point for 5-point sensor-distance curve-fit. Move both poles of the magnet at a fixed vicinity y4=1 over the given sensor only. This vicinity represents the maximal sensor value and hence the smallest distance (or even none) from the case.",
+			"Determine the sensitivity of each sensor: move the magnet along the sensor array at a fixed vicinity (e.g. 0.75). Start left with one polarity, go right, return left, turn the polarity around, go right, return left and procede.",
+			"You can now save your calibration data to EEPROM, so the device will load it at future boots.",
 		];
 
-		text = StaticText.new(win, Rect(10, 50, 380, 140));
+		text = StaticText.new(win, Rect(10, 90, 380, 140));
 		text.string = desc[0];
 
 		acts = [
 			{ conf.sendMsg("/chimaera/calibration/start"); },
 			{ conf.sendMsg("/chimaera/calibration/zero"); },
-			{ conf.sendMsg("/chimaera/calibration/min"); },
-			{ conf.sendMsg("/chimaera/calibration/mid", 0.7); },
+			{ conf.sendMsg("/chimaera/calibration/min", {|msg|
+				Routine.run({num.visible=true; is.string="Sensor #"++msg[0]; is.visible=true;}, clock:AppClock);
+			})},
+			{ conf.sendMsg("/chimaera/calibration/mid", num.value); },
+			{ conf.sendMsg("/chimaera/calibration/mid", num.value); },
+			{ conf.sendMsg("/chimaera/calibration/mid", num.value, {|msg|
+				Routine.run({num.value=1; num.visible=false;}, clock:AppClock);
+			})},
+			{ conf.sendMsg("/chimaera/calibration/max", {|msg|
+				Routine.run({num.visible=true; is.visible=false;}, clock:AppClock);
+			})},
+			{ conf.sendMsg("/chimaera/calibration/end", num.value, {|msg|
+				Routine.run({num.value=0; num.visible=false; is.visible=false;}, clock:AppClock);
+			})},
 			{ conf.sendMsg("/chimaera/calibration/save", 0); },
 		];
 
@@ -58,8 +74,12 @@ ChimaeraCal {
 		button.states = [
 			["Start Calibration"],
 			["Step 1: Quiescence"],
-			["Step 2: Threshold"],
-			["Step 3: Sensitivity"],
+			["Step 2: Threshold @ y=0"],
+			["Step 3: Curve fit @ y1>0"],
+			["Step 4: Curve fit @ y2>y1"],
+			["Step 5: Curve fit @ y3>y2"],
+			["Step 6: Curve fit @ y=1"],
+			["Step 6: Sensitivity @ y=?"],
 			["Save Calibration"],
 		];
 		button.action = { |b|
@@ -71,13 +91,15 @@ ChimaeraCal {
 			text.string = desc[i];
 		};
 
-		/*
-		b= Button.new(win,Rect(10,0,80,30)).states_([["Hide"],["Show"]]);
-		s = Slider.new(w,Rect(95,0,150,30));
-		c = CompositeView.new(w,Rect(20,35,100,60));
-		StaticText.new(c,Rect(0,0,80,30)).string_("Hello");
-		StaticText.new(c,Rect(20,30,80,30)).string_("World!");
-		b.action = { c.visible = b.value.asBoolean.not };
-		*/
+		is= StaticText.new(win, Rect(10, 50, 190, 40));
+		is.visible = false;
+		is.string = "unknown";
+
+    num = NumberBox.new(win, Rect(200, 50, 190, 40));
+		num.clipLo = 0.0;
+		num.clipHi = 1.0;
+		num.decimals = 3;
+		num.visible = false;
+    num.value = 0.0;
 	}
 }
