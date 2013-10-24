@@ -21,45 +21,32 @@
  *     distribution.
  */
 
-{|n|
-	var baseInst, leadInst, loadInst, win, adrop, bdrop;
+/*
+ * discrete pitch instrument
+ *
+ * x := frequency
+ * z := volume, distortion, cutoff frequency of low-pass filter
+ */
 
-	/*
-	 * populate instrument name arrays
-	 */
-	baseInst = Array.new(64);
-	leadInst = Array.new(64);
-	p = PathName("../instruments");
-	p.filesDo({|n|
-		var name = n.fileNameWithoutExtension;
-		baseInst.add(name);
-		leadInst.add(name);
-	});
+{|synthname, n|
+	var scale, buf;
+	var bot = 3*12 - 0.5 - (n/3 % 12 / 2);
+	var top = n/3 + bot + 1;
+		
+	scale = FloatArray[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; // dorian scale
+	buf = Buffer.alloc(s, scale.size, 1, {|b| b.setnMsg(0, scale) });
 
-	/*
-	 * load instrument
-	 */
-	loadInst = {|group, inst|
-		//s.sendMsg(\n_set, 'gate', 0);
-		("../instruments/"++inst++".sc").load.value(group, n);
-	};
+	SynthDef(synthname, {|freq=0, amp=0, p=0, gate=0, out=0|
+		var suicide, up=0.1, down=1.0, env, sig, vol;
 
-	loadInst.value(\base, baseInst[0]);
-	loadInst.value(\lead, leadInst[0]);
+		suicide = DetectSilence.kr(Line.kr(0.1, 0.0, 1.0)+gate, 0.0001, down, doneAction:2);
+		env = Linen.kr(gate, up, 1.0, down);
 
-	win = Window.new("Instruments", Rect(200,200,400,100)).front;
+		freq = DegreeToKey.kr(buf.bufnum, freq*(top-bot), 12, 1, bot).midicps;
 
-	adrop = PopUpMenu(win, Rect(10,10,180,20));
-	adrop.items = baseInst;
-	adrop.action = {|menu|
-		//[menu.value, menu.item].postln;
-		loadInst.value(\base, menu.item);
-	};
-
-	bdrop = PopUpMenu(win, Rect(200,10,180,20));
-	bdrop.items = leadInst;
-	bdrop.action = {|menu|
-		//[menu.value, menu.item].postln;
-		loadInst.value(\lead, menu.item);
-	};
+		vol = LinExp.kr(amp, 0.0, 1.0, 0.5, 1.0);
+		sig = SinOsc.ar(freq);
+		sig = FreeVerb.ar(sig, mix:0.8, room:0.1, damp:0.1, mul:vol*env);
+		OffsetOut.ar(out, sig);
+	}).add;
 }

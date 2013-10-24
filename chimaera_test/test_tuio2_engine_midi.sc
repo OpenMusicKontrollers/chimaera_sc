@@ -24,12 +24,21 @@
  */
 
 {
-	var rx, tx, chimconf, chimtuio2, midio, lookup, baseID, leadID, effect;
+	var rx, tx, chimconf, chimtuio2, midio, lookup, baseID, leadID, effect, bot, ran;
 
 	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
 	tx = NetAddr ("chimaera.local", 4444);
 
 	chimconf = ChimaeraConf(s, tx, tx);
+
+	bot = 24 - 0.55;
+	ran = 49 + 1;
+
+	chimconf.sendMsg("/chimaera/sensors", {|msg|
+		var n=msg[0];
+		bot = 3*12 - 0.5 - (n/3 % 12 / 2);
+		ran = n/3 + 1;
+	});
 
 	chimconf.sendMsg("/chimaera/output/enabled", true); // enable output
 	chimconf.sendMsg("/chimaera/output/address", "192.168.1.10:3333"); // send output stream to port 3333
@@ -68,14 +77,14 @@
 
 	chimtuio2.on = { |time, sid, pid, gid, x, z| // set callback function for blob on-events
 		var midikey, cc;
-		midikey = x*48+24;
+		midikey = x*ran + bot;
 		cc = (z*0x3fff).asInteger;
 	
 		//(time-SystemClock.beats).postln; //uncomment this to check whether there are late messages (if so, adjust the offset on the device)
 
 		lookup[sid] = midikey.round;
 		midio.noteOn(gid, lookup[sid], 0x7f); // we're using the group id (gid) as MIDI channel number
-		midio.bend(gid, midikey-lookup[sid]/48*0x2000+0x2000); // we're using a pitchbend span of 4800 cents
+		midio.bend(gid, midikey-lookup[sid]/ran*0x2000+0x2000); // we're using a pitchbend span of ran*100 cents
 		midio.control(gid, effect | 0x20, cc & 0x7f); // effect LSB
 		midio.control(gid, effect | 0x00, cc >> 7); // effect MSB
 	};
@@ -87,10 +96,10 @@
 
 	chimtuio2.set = { |time, sid, pid, gid, x, z| // set callback function for blob set-events
 		var midikey, cc;
-		midikey = x*48+24;
+		midikey = x*ran + bot;
 		cc = (z*0x3fff).asInteger;
 
-		midio.bend(gid, midikey-lookup[sid]/48*0x2000+0x2000); // we're using a pitchbend span of 4800 cents
+		midio.bend(gid, midikey-lookup[sid]/ran*0x2000+0x2000); // we're using a pitchbend span of ran*100 cents
 		midio.control(gid, effect | 0x20, cc & 0x7f); // effect LSB
 		midio.control(gid, effect | 0x00, cc >> 7); // effect MSB
 	};

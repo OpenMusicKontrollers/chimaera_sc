@@ -29,7 +29,7 @@ s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var rx, tx, chimconf, chimtuio2, baseID, leadID, bndl;
+	var rx, tx, chimconf, chimtuio2, baseOut, leadOut, baseGrp, bndl;
 
 	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
 	tx = NetAddr ("chimaera.local", 4444);
@@ -44,15 +44,21 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/tuio/enabled", true); // enable Tuio output engine
 	chimconf.sendMsg("/chimaera/tuio/long_header", false); // use short Tuio frame header (default)
 
-	baseID = 0;
-	leadID = 1;
+	baseOut = 0;
+	leadOut = 1;
+	baseGrp = 100 + baseOut;
 
-	"../templates/single_group.sc".load.value(baseID);
-	"../instruments/anabase_4d.sc".load.value(\base);
+	chimconf.sendMsg("/chimaera/sensors", {|msg|
+		var n=msg[0];
+		Routine.run({
+			"../templates/single_group.sc".load.value(baseGrp);
+			"../instruments/pluck_4f.sc".load.value(\base, n);
+		}, clock:AppClock);
+	});
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group/set", baseID, ChimaeraConf.north, 0.0, 1.0); // add group
-	chimconf.sendMsg("/chimaera/group/set", leadID, ChimaeraConf.south, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", baseOut, ChimaeraConf.north, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group/set", leadOut, ChimaeraConf.south, 0.0, 1.0); // add group
 
 	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
 	rx = NetAddr ("chimaera.local", 3333);
@@ -78,11 +84,11 @@ s.doWhenBooted({
 		lag = time - SystemClock.beats;	
 		//["on", time, sid, lag].postln;
 
-		if(gid==baseID) {
-			s.sendMsg('/s_new', \base, sid, \addToHead, gid, 'out', gid, 'gate', 0);
+		if(gid==baseOut) {
+			s.sendMsg('/s_new', \base, sid, \addToHead, baseGrp, 'out', baseOut, 'gate', 0);
 			bndl = bndl.add(['/n_set', sid, 0, x, 1, z, 2, pid, 'gate', 1]);
 		} {
-			bndl = bndl.add(['/n_set', baseID, 3, x, 4, z, 5, pid]);
+			bndl = bndl.add(['/n_set', baseGrp, 3, x, 4, z, 5, pid]);
 		};
 	};
 
@@ -93,7 +99,7 @@ s.doWhenBooted({
 		lag = time - SystemClock.beats;	
 		//["off", time, sid].postln;
 
-		if(gid==baseID) {
+		if(gid==baseOut) {
 			bndl = bndl.add(['/n_set', sid, 'gate', 0]);
 		};
 	};
@@ -104,10 +110,10 @@ s.doWhenBooted({
 		sid = sid + 1000;
 		lag = time - SystemClock.beats;	
 
-		if(gid==baseID) {
+		if(gid==baseOut) {
 			bndl = bndl.add(['/n_set', sid, 0, x, 1, z, 2, pid]);
 		} {
-			bndl = bndl.add(['/n_set', baseID, 3, x, 4, z, 5, pid]);
+			bndl = bndl.add(['/n_set', baseGrp, 3, x, 4, z, 5, pid]);
 		};
 	};
 
@@ -116,6 +122,6 @@ s.doWhenBooted({
 	
 		lag = time - SystemClock.beats;
 
-		s.sendBundle(lag, ['/n_set', baseID, 'gate', 0]);
+		s.sendBundle(lag, ['/n_set', baseGrp, 'gate', 0]);
 	};
 })

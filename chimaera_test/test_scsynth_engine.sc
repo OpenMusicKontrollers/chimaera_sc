@@ -57,6 +57,11 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/scsynth/group", baseOut, \base, 200, baseGrp, baseOut, 0, true, true, \addToHead.asInt, false);
 	chimconf.sendMsg("/chimaera/scsynth/group", leadOut, \lead, 200, leadGrp, leadOut, 0, true, true, \addToHead.asInt, false);
 
-	"../templates/two_groups_separate.sc".load.value(baseOut, leadOut, baseGrp, leadGrp);
-	"scsynth_instrument_chooser.sc".load.value();
+	chimconf.sendMsg("/chimaera/sensors", {|msg|
+		var n=msg[0];
+		Routine.run({
+			"../templates/two_groups_separate.sc".load.value(baseOut, leadOut, baseGrp, leadGrp);
+			"scsynth_instrument_chooser.sc".load.value(n);
+		}, clock:AppClock);
+	});
 });

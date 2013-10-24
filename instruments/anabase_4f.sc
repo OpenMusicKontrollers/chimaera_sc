@@ -28,7 +28,9 @@
  * y := cutoff frequency of low-pass filter
  */
 
-{|synthname|
+{|synthname, n|
+	var bot = 3*12 - 0.5 - (n/3 % 12 / 2);
+	var top = n/3 + bot + 1;
 
 	SynthDef(synthname, {|freq=0, amp=0, p=0, freq2=0, amp2=0, p2=0, gate=1, out=0|
 		var suicide, up=0.1, down=0.5, env, sig, cutoff;
@@ -36,8 +38,8 @@
 		suicide = DetectSilence.kr(Line.kr(0.1, 0.0, 1.0)+gate, 0.0001, down, doneAction:2);
 		env = Linen.kr(gate, up, 1.0, down);
 
-		freq = LinExp.kr(freq, 0, 1, (2*12-0.5).midicps, (6*12+0.5).midicps);
-		freq2 = LinExp.kr(freq2, 0, 1, (2*12-0.5).midicps, (6*12+0.5).midicps);
+		freq = LinExp.kr(freq, 0, 1, bot.midicps, top.midicps);
+		freq2 = LinExp.kr(freq2, 0, 1, bot.midicps, top.midicps);
 
 		sig = SyncSaw.ar(freq, freq2, mul:amp2*env);
 		sig = RLPF.ar(sig, amp*1900+100, 0.1);

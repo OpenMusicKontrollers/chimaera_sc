@@ -21,7 +21,9 @@
  *     distribution.
  */
 
-{|synthname|
+{|synthname, n|
+	var bot = 1*12 - 0.5 - (n/3 % 12 / 2);
+	var top = n + bot + 1;
 
 	SynthDef(synthname, {|freq=0, amp=0, p=0, gate=1, out=0|
 		var suicide, up=0.1, down=0.5, env, sig, cutoff;
@@ -29,10 +31,10 @@
 		suicide = DetectSilence.kr(Line.kr(0.1, 0.0, 1.0)+gate, 0.0001, down, doneAction:2);
 		env = Linen.kr(gate, up, 1.0, down);
 
-		amp = LinExp.kr(amp, 0, 1, (2*12-0.5).midicps, (10*12+0.5).midicps);
+		freq = LinExp.kr(freq, 0, 1, bot.midicps, top.midicps);
 
 		sig = AudioIn.ar(out+1);
-		sig = RLPF.ar(sig, amp, 0.2);
+		sig = RLPF.ar(sig, freq, 0.1, mul:env*amp);
 		OffsetOut.ar(out, sig);
 	}).add;
 }

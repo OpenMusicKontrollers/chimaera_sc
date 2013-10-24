@@ -58,8 +58,13 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/tuio/enabled", true); // enable Tuio output engine
 	chimconf.sendMsg("/chimaera/tuio/long_header", false); // use short Tuio frame header (default)
 
-	"../templates/two_groups_separate.sc".load.value(baseOut, leadOut, baseGrp, leadGrp);
-	"scsynth_instrument_chooser.sc".load.value();
+	chimconf.sendMsg("/chimaera/sensors", {|msg|
+		var n=msg[0];
+		Routine.run({
+			"../templates/two_groups_separate.sc".load.value(baseOut, leadOut, baseGrp, leadGrp);
+			"scsynth_instrument_chooser.sc".load.value(n);
+		}, clock:AppClock);
+	});
 
 	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
 	rx = NetAddr ("chimaera.local", 3333);

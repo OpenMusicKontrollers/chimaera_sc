@@ -41,8 +41,9 @@ ChimaeraDump {
 			var w = 6;
 			var w2 = w - 2;
 			var m = 2200;
-			var d = 2048 / m * h;
 			var sc = 1 / m * h;
+			var d = 2048 * sc;
+			var t = 2032 * sc; //TODO
 			var p0, p1, p2, p3;
 
 			n = n[0];
@@ -72,7 +73,7 @@ ChimaeraDump {
 						msb = arr[i*2] << 8;
 						val = msb | lsb;
 						val = val * sc;
-						if(val.abs >= d) {
+						if(val.abs >= t) {
 							Pen.fillColor = Color.yellow;
 						} {
 							if(val < 0) {

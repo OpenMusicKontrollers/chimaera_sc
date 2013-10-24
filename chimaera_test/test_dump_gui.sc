@@ -39,7 +39,7 @@
 	chimconf.sendMsg("/chimaera/output/offset", 0.001); // add 1ms offset to bundle timestamps
 	chimconf.sendMsg("/chimaera/output/reset"); // reset all output engines
 
-	//chimconf.sendMsg("/chimaera/calibration/reset");
+	chimconf.sendMsg("/chimaera/calibration/reset");
 
 	chimdump = ChimaeraDump(s, chimconf, rx);
 }.value;

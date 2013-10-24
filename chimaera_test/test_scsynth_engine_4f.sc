@@ -57,6 +57,11 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/scsynth/group", baseOut, \base, 200, baseGrp, baseOut, 0, true, true, \addToHead.asInt, false);
 	chimconf.sendMsg("/chimaera/scsynth/group", leadOut, \lead, 200, baseGrp, leadOut, 3, false, false, \addToHead.asInt, true);
 
-	"../templates/single_group.sc".load.value(baseGrp);
-	"../instruments/cello_4f.sc".load.value(\base);
+	chimconf.sendMsg("/chimaera/sensors", {|msg|
+		var n=msg[0];
+		Routine.run({
+			"../templates/single_group.sc".load.value(baseGrp);
+			"../instruments/pluck_4f.sc".load.value(\base, n);
+		}, clock:AppClock);
+	});
 });

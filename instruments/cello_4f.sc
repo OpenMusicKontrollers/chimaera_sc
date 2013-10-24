@@ -21,7 +21,9 @@
  *     distribution.
  */
 
-{|synthname|
+{|synthname, n|
+	var bot = 3*12 - 0.5 - (n/3 % 12 / 2);
+	var top = n/3 + bot + 1;
 
 	SynthDef(synthname, {|freq=0, amp=0, p=0, freq1=0, amp1=0, p1=0, gate=0, out=0|
 		var up=0.1, down=0.5, env, suicide, sig, x, y;
@@ -29,7 +31,7 @@
 		suicide = DetectSilence.kr(Line.kr(0.1, 0.0, 1.0)+gate, 0.0001, down, doneAction:2);
 		env = Linen.kr(gate, up, 1.0, down);
 
-		freq = LinExp.kr(freq, 0, 1, (3*12-0.5).midicps, (7*12+0.5).midicps);
+		freq = LinExp.kr(freq, 0, 1, bot.midicps, top.midicps);
 
 		freq1 = freq1 - OnePole.kr(freq1, 0.998); // differentiate
 		freq1 = RunningSum.kr(freq1.abs.tan, 20)*0.05;
