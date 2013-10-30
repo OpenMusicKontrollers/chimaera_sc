@@ -45,8 +45,8 @@
 	chimconf.sendMsg("/chimaera/output/offset", 0.0012); // add 1.2ms offset to bundle timestamps
 	chimconf.sendMsg("/chimaera/output/reset"); // reset all output engines
 
-	chimconf.sendMsg("/chimaera/tuio/enabled", true); // enable Tuio output engine
-	chimconf.sendMsg("/chimaera/tuio/long_header", false); // use short Tuio frame header (default)
+	chimconf.sendMsg("/chimaera/tuio2/enabled", true); // enable Tuio output engine
+	chimconf.sendMsg("/chimaera/tuio2/long_header", false); // use short Tuio frame header (default)
 
 	baseID = 0;
 	leadID = 1;

@@ -55,8 +55,8 @@ s.doWhenBooted({
 	chimconf.sendMsg("/chimaera/group/set", baseOut, ChimaeraConf.north, 0.0, 1.0); // add group
 	chimconf.sendMsg("/chimaera/group/set", leadOut, ChimaeraConf.south, 0.0, 1.0); // add group
 
-	chimconf.sendMsg("/chimaera/tuio/enabled", true); // enable Tuio output engine
-	chimconf.sendMsg("/chimaera/tuio/long_header", false); // use short Tuio frame header (default)
+	chimconf.sendMsg("/chimaera/tuio2/enabled", true); // enable Tuio output engine
+	chimconf.sendMsg("/chimaera/tuio2/long_header", false); // use short Tuio frame header (default)
 
 	chimconf.sendMsg("/chimaera/sensors", {|msg|
 		var n=msg[0];
