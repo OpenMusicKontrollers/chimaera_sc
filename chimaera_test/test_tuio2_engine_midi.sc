@@ -31,8 +31,8 @@
 
 	chimconf = ChimaeraConf(s, tx, tx);
 
-	bot = 24 - 0.55;
-	ran = 49 + 1;
+	bot = 24 - 0.5;
+	ran = 48 + 1;
 
 	chimconf.sendMsg("/chimaera/sensors", {|msg|
 		var n=msg[0];
