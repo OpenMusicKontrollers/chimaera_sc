@@ -32,22 +32,22 @@ ChimaeraInDummy : ChimaeraIn {
 		conf.sendMsg("/chimaera/dummy/enabled", true); // enable dummy output engine
 
 		on = OSCFunc({ |msg, time, addr, port|
-			update(time);
+			this.update(time);
 			engine.on(time, msg[1], msg[2], msg[3], msg[4], msg[5]);
 		}, "/on", rx);
 
 		off = OSCFunc({ |msg, time, addr, port|
-			update(time);
+			this.update(time);
 			engine.off(time, msg[1], msg[2], msg[3]);
 		}, "/off", rx);
 
 		set = OSCFunc({ |msg, time, addr, port|
-			update(time);
+			this.update(time);
 			engine.set(time, msg[1], msg[2], msg[3], msg[4], msg[5]);
 		}, "/set", rx);
 
 		idle = OSCFunc({ |msg, time, addr, port|
-			update(time);
+			this.update(time);
 			engine.idle(time);
 		}, "/idle", rx);
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Hanspeter Portner (agenthp@users.sf.net)
+ * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -109,8 +109,8 @@ PaceMaker {
 		^super.new.init(s, out, beatsPerMinute, beatsPerBar);
 	}
 
-	init {|s, out, beatsPerMinute=200, beatsPerBar=4|
-		SynthDef(\pace_maker, {|out, barRate, beatRate|
+	init {|s, out, beatsPerMinute=120, beatsPerBar=4|
+		SynthDef(\pace_maker, {|barRate, beatRate|
 			var bar, beat;
 			bar = Impulse.kr(barRate);
 			beat = Impulse.kr(beatRate);
@@ -124,17 +124,16 @@ PaceMaker {
 
 		pace = ( type: \on,
 			instrument: \pace_maker,
-			out: out,
 			barRate: barRate,
 			beatRate: beatRate
 		).play;
 
 		OSCFunc({|msg, time, addr, port|
-			"\r".post;
+			"\n".post;
 		}, "/bar", nil);
 
 		OSCFunc({|msg, time, addr, port|
-			"|".post;
+			".".post;
 		}, "/beat", nil);
 	}
 

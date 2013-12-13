@@ -29,38 +29,26 @@ s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var rx, tx, chimconf, chimtuio2, baseOut, leadOut, baseGrp, event;
+	var rx, tx, chimconf, chimin, chimout;
 
+	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
 	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
+
+	rx = NetAddr ("chimaera.local", 3333);
 	tx = NetAddr ("chimaera.local", 4444);
 
 	chimconf = ChimaeraConf(s, tx, tx);
 
-	chimconf.sendMsg("/chimaera/output/enabled", true); // enable output
-	chimconf.sendMsg("/chimaera/output/address", "192.168.1.10:3333"); // send output stream to port 3333
-	chimconf.sendMsg("/chimaera/output/offset", 0.002); // add 1ms offset to bundle timestamps
-	chimconf.sendMsg("/chimaera/output/reset"); // reset all output engines
-
-	chimconf.sendMsg("/chimaera/tuio2/enabled", true); // enable Tuio output engine
-	chimconf.sendMsg("/chimaera/tuio2/long_header", false); // use short Tuio frame header (default)
-
-	baseOut = 0;
-	leadOut = 1;
-	baseGrp = 100 + baseOut;
-
-	chimconf.sendMsg("/chimaera/sensors", {|msg|
-		var n=msg[0];
-		"templates/single_group.sc".load.value(baseGrp);
-		"../instruments/pluck_4f.sc".load.value(\base, n);
-	});
+	chimconf.sendMsg("/chimaera/output/reset");
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group", baseOut, ChimaeraConf.north, 0.0, 1.0, false); // add group
-	chimconf.sendMsg("/chimaera/group", leadOut, ChimaeraConf.south, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/chimaera/group", 0, ChimaeraConf.north, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/chimaera/group", 1, ChimaeraConf.south, 0.0, 1.0, false); // add group
 
-	engine = "../engines/scevent_4f.sc".load.value(baseGrp, baseOut);
-
-	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
-	rx = NetAddr ("chimaera.local", 3333);
-	chimtuio2 = ChimaeraTuio2(s, rx, engine);
+	chimconf.sendMsg("/chimaera/sensors", {|msg|
+		var n = msg[0];
+		chimout = ChimaeraOutSCSynth2F(s, n, [\base, \lead]);
+		chimin = ChimaeraInTuio2(s, chimconf, rx, chimout);
+		Routine.run({"./instruments2F.sc".load.value(n);}, clock:AppClock);
+	});
 })

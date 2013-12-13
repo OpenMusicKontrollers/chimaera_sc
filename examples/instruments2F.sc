@@ -1,5 +1,3 @@
-#!/usr/bin/sclang
-
 /*
  * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
@@ -23,23 +21,43 @@
  *     distribution.
  */
 
-{
-	var rx, tx, chimconf, chimdump;
+{|n|
+	var baseInst, leadInst, loadInst, win, adrop, bdrop, path;
 
-	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
-	tx = NetAddr("chimaera.local", 4444);
+	/*
+	 * populate instrument name arrays
+	 */
+	baseInst = Array.new(64);
+	leadInst = Array.new(64);
+	path = "./instruments/2F/";
+	p = PathName(path);
+	p.filesDo({|n|
+		var name = n.fileNameWithoutExtension;
+		baseInst.add(name);
+		leadInst.add(name);
+	});
 
-	thisProcess.openUDPPort(3333); // open port 3333 to listen for dump messages
-	rx = NetAddr("chimaera.local", 3333);
+	/*
+	 * load instrument
+	 */
+	loadInst = {|group, inst|
+		(path++inst++".sc").load.value(group, n);
+	};
 
-	chimconf = ChimaeraConf(s, tx, tx);
+	loadInst.value(\base, baseInst[0]);
+	loadInst.value(\lead, leadInst[0]);
 
-	chimconf.sendMsg("/chimaera/output/enabled", true); // enable output
-	chimconf.sendMsg("/chimaera/output/address", "192.168.1.10:3333"); // send output stream to port 3333
-	chimconf.sendMsg("/chimaera/output/offset", 0.001); // add 1ms offset to bundle timestamps
-	chimconf.sendMsg("/chimaera/output/reset"); // reset all output engines
+	win = Window.new("2F Instruments", Rect(200,200,400,100)).front;
 
-	chimconf.sendMsg("/chimaera/calibration/reset");
+	adrop = PopUpMenu(win, Rect(10,10,180,20));
+	adrop.items = baseInst;
+	adrop.action = {|menu|
+		loadInst.value(\base, menu.item);
+	};
 
-	chimdump = ChimaeraDump(s, chimconf, rx);
-}.value;
+	bdrop = PopUpMenu(win, Rect(200,10,180,20));
+	bdrop.items = leadInst;
+	bdrop.action = {|menu|
+		loadInst.value(\lead, menu.item);
+	};
+}

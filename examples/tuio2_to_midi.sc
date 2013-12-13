@@ -1,3 +1,5 @@
+#!/usr/bin/sclang
+
 /*
  * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
@@ -21,34 +23,27 @@
  *     distribution.
  */
 
-{|n|
-	var baseInst, loadInst, win, adrop, path;
+{
+	var rx, tx, chimconf, chimin, chimout;
 
-	/*
-	 * populate instrument name arrays
-	 */
-	baseInst = Array.new(64);
-	path = "instruments/4f/";
-	p = PathName(path);
-	p.filesDo({|n|
-		var name = n.fileNameWithoutExtension;
-		baseInst.add(name);
+	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
+	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
+
+	rx = NetAddr ("chimaera.local", 3333);
+	tx = NetAddr ("chimaera.local", 4444);
+
+	chimconf = ChimaeraConf(s, tx, tx);
+
+	chimconf.sendMsg("/chimaera/output/reset");
+
+	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
+	chimconf.sendMsg("/chimaera/group", 0, ChimaeraConf.north, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/chimaera/group", 1, ChimaeraConf.south, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/chimaera/sensors", {|msg|
+		var n = msg[0];
+		chimout = ChimaeraOutMidi(s, n, [\base, \lead]);
+		chimout.effect = 0x07;
+		chimout.doublePrecision = true;
+		chimin = ChimaeraInTuio2(s, chimconf, rx, chimout);
 	});
-
-	/*
-	 * load instrument
-	 */
-	loadInst = {|group, inst|
-		(path++inst++".sc").load.value(group, n);
-	};
-
-	loadInst.value(\base, baseInst[0]);
-
-	win = Window.new("4F Instruments", Rect(200,200,200,100)).front;
-
-	adrop = PopUpMenu(win, Rect(10,10,180,20));
-	adrop.items = baseInst;
-	adrop.action = {|menu|
-		loadInst.value(\base, menu.item);
-	};
-}
+}.value;

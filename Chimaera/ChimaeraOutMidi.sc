@@ -24,7 +24,7 @@
 ChimaeraOutMidi : ChimaeraOut {
 	var midio, <>effect, <>doublePrecision, bot, ran, lookup;
 
-	init {|s, n|
+	init {|s, n, groups|
 		MIDIClient.init;
 		//midio = MIDIOut(0, MIDIClient.destinations[0].uid); // use this on MacOS, Windows to connect to the MIDI stream of choice
 		midio = MIDIOut(0); // use this on Linux, as patching is usually done via ALSA/JACK
@@ -41,6 +41,9 @@ ChimaeraOutMidi : ChimaeraOut {
 
 	start { |time|
 		midio.latency = time - SystemClock.beats;
+		if(midio.latency < 0) {
+			("message late"+(midio.latency*1000)+"ms").postln;
+		};
 	}
 
 	end { |time|
@@ -50,8 +53,6 @@ ChimaeraOutMidi : ChimaeraOut {
 	on { |time, sid, gid, pid, x, z| // set callback function for blob on-events
 		var midikey, cc;
 		midikey = x*ran+bot;
-	
-		//(time-SystemClock.beats).postln; //uncomment this to check whether there are late messages (if so, adjust the offset on the device)
 
 		lookup[sid] = midikey.round;
 		midio.noteOn(gid, lookup[sid], 0x7f); // we're using the group id (gid) as MIDI channel number

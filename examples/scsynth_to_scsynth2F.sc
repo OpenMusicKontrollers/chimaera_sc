@@ -30,38 +30,38 @@ s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var txrx, chimconf, baseOut, leadOut, baseGrp, leadGrp;
+	var rx, tx, chimconf, sidOffset, gidOffset;
 
-	thisProcess.openUDPPort(4444);
-	txrx = NetAddr("chimaera.local", 4444);
+	gidOffset = 100;
+	sidOffset = 200;
 
-	chimconf = ChimaeraConf(s, txrx, txrx);
+	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
+	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
 
-	chimconf.sendMsg("/chimaera/output/enabled", true); // enable output socket on device
-	chimconf.sendMsg("/chimaera/output/address", "192.168.1.10:57110"); // send to scsynth port
-	chimconf.sendMsg("/chimaera/output/offset", 0.001); // add 1ms offset to bundle timestamps
-	chimconf.sendMsg("/chimaera/output/reset"); // reset all output engines
+	rx = NetAddr ("chimaera.local", 3333);
+	tx = NetAddr ("chimaera.local", 4444);
 
-	chimconf.sendMsg("/chimaera/interpolation/order", 2); // cubic interpolation
+	chimconf = ChimaeraConf(s, tx, tx);
 
-	baseOut = 0;
-	leadOut = 1;
-	baseGrp = 100 + baseOut;
-	leadGrp = 100 + leadOut;
+	chimconf.sendMsg("/chimaera/output/reset");
+	chimconf.sendMsg("/chimaera/output/address", "melamori.local:57110");
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group", baseOut, ChimaeraConf.north, 0.0, 1.0, false); // add group
-	chimconf.sendMsg("/chimaera/group", leadOut, ChimaeraConf.south, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/chimaera/group", 0, ChimaeraConf.north, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/chimaera/group", 1, ChimaeraConf.south, 0.0, 1.0, false); // add group
 
 	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
-	chimconf.sendMsg("/chimaera/scsynth/group", baseOut, \base, 200, baseGrp, baseOut, 0, true, true, \addToHead.asInt, false);
-	chimconf.sendMsg("/chimaera/scsynth/group", leadOut, \lead, 200, baseGrp, leadOut, 3, false, false, \addToHead.asInt, true);
+	chimconf.sendMsg("/chimaera/scsynth/group", 0, \base, sidOffset, 0+gidOffset, 0, 0, true, true, \addToHead.asInt, false);
+	chimconf.sendMsg("/chimaera/scsynth/group", 1, \lead, sidOffset, 1+gidOffset, 1, 0, true, true, \addToHead.asInt, false);
+
+	s.sendMsg('/g_new', 0+gidOffset, \addToHead.asInt, 0);
+	s.sendMsg('/g_new', 1+gidOffset, \addToHead.asInt, 0);
+	s.sync;
 
 	chimconf.sendMsg("/chimaera/sensors", {|msg|
 		var n=msg[0];
 		Routine.run({
-			"templates/single_group.sc".load.value(baseGrp);
-			"scsynth_instrument_chooser_4f.sc".load.value(n);
+			"./instruments2F.sc".load.value(n);
 		}, clock:AppClock);
 	});
-});
+})

@@ -21,9 +21,34 @@
  *     distribution.
  */
 
-{|baseGrp|
+{|n|
+	var baseInst, loadInst, win, adrop, path;
 
-	s.sendMsg('/g_new', baseGrp, \addToHead.asInt, 0);
+	/*
+	 * populate instrument name arrays
+	 */
+	baseInst = Array.new(64);
+	path = "./instruments/4F/";
+	p = PathName(path);
+	p.filesDo({|n|
+		var name = n.fileNameWithoutExtension;
+		baseInst.add(name);
+	});
 
-	s.sync;
+	/*
+	 * load instrument
+	 */
+	loadInst = {|group, inst|
+		(path++inst++".sc").load.value(group, n);
+	};
+
+	loadInst.value(\base, baseInst[0]);
+
+	win = Window.new("4F Instruments", Rect(200,200,200,100)).front;
+
+	adrop = PopUpMenu(win, Rect(10,10,180,20));
+	adrop.items = baseInst;
+	adrop.action = {|menu|
+		loadInst.value(\base, menu.item);
+	};
 }

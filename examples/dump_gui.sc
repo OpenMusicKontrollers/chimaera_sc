@@ -1,7 +1,7 @@
 #!/usr/bin/sclang
 
 /*
- * Copyright (c) 2013 Hanspeter Portner (agenthp@users.sf.net)
+ * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,42 +23,23 @@
  *     distribution.
  */
 
-s.boot;
+{
+	var rx, tx, chimconf, chimdump;
 
-s.doWhenBooted({
-	var looper, channel, bar, beat, pacemaker;
+	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
+	tx = NetAddr("chimaera.local", 4444);
 
-	bar = 20;
-	beat = 21;
-	looper = Looper(s, 4, 10);
+	thisProcess.openUDPPort(3333); // open port 3333 to listen for dump messages
+	rx = NetAddr("chimaera.local", 3333);
 
-	pacemaker = PaceMaker(s, [bar, beat], 250, 4);
+	chimconf = ChimaeraConf(s, tx, tx);
 
-	channel = 0;
+	chimconf.sendMsg("/chimaera/output/enabled", true); // enable output
+	chimconf.sendMsg("/chimaera/output/address", "192.168.1.10:3333"); // send output stream to port 3333
+	chimconf.sendMsg("/chimaera/output/offset", 0.001); // add 1ms offset to bundle timestamps
+	chimconf.sendMsg("/chimaera/output/reset"); // reset all output engines
 
-	OSCFunc({|msg, time, addr, port|
-		var channel, state;
-		channel = msg[1];
-		state = msg[2];
-		if(state != 0) {
-			("starting recording on channel" ++ channel).postln;
-			looper.record(channel, 8, bar);
-		} {
-			("stopping recording on channel" ++ channel).postln;
-			looper.abort(channel);
-		}
-	}, "/looper/record", nil, 1212);
+	//chimconf.sendMsg("/chimaera/calibration/reset"); // uncomment to reset quiescent output
 
-	OSCFunc({|msg, time, addr, port|
-		var channel, state;
-		channel = msg[1];
-		state = msg[2];
-		if(state != 0) {
-			("starting playback on channel" ++ channel).postln;
-			looper.play(channel, 0, bar);
-		} {
-			("stopping playback on channel" ++ channel).postln;
-			looper.stop(channel);
-		}
-	}, "/looper/play", nil, 1212);
-})
+	chimdump = ChimaeraDump(s, chimconf, rx);
+}.value;

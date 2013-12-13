@@ -1,3 +1,5 @@
+#!/usr/bin/sclang
+
 /*
  * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
@@ -22,29 +24,26 @@
  */
 
 {
-	var srcDict, dstDict, srcPort, dstPort, win, srcDrop, dstDrop;
+	var rx, tx, chimconf, chimin, chimout;
 
-	srcDict = Dictionary.new;
-	dstDict = Dictionary.new;
+	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
+	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
 
-	srcPort = Dictionary.new;
-	dstPort = Dictionary.new;
+	rx = NetAddr ("chimaera.local", 3333);
+	tx = NetAddr ("chimaera.local", 4444);
 
-	MIDIClient.init;
-	MIDIClient.sources.do({|endpoint| srcDict[endpoint.name]=endpoint});
-	MIDIClient.destinations.do({|endpoint| dstDict[endpoint.name]=endpoint});
+	chimconf = ChimaeraConf(s, tx, tx);
 
-	win = Window.new("MIDI port", Rect(200,200,400,100)).front;
+	chimconf.sendMsg("/chimaera/output/reset");
 
-	srcDrop = PopUpMenu(win, Rect(10,10,180,20));
-	srcDrop.items = srcDict.keys.asArray;
-	srcDrop.action = {|n|
-		srcPort[n.item] = MIDIIn(srcDict[n.item].uid);
-	};
-
-	dstDrop = PopUpMenu(win, Rect(200,10,180,20));
-	dstDrop.items = dstDict.keys.asArray;
-	dstDrop.action = {|n|
-		dstPort[n.item] = MIDIOut(dstDict[n.item].uid);
-	};
-}
+	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
+	chimconf.sendMsg("/chimaera/group", 0, ChimaeraConf.north, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/chimaera/group", 1, ChimaeraConf.south, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/chimaera/sensors", {|msg|
+		var n = msg[0];
+		chimout = ChimaeraOutMidi(s, n, [\base, \lead]);
+		chimout.effect = 0x07;
+		chimout.doublePrecision = true;
+		chimin = ChimaeraInDummy(s, chimconf, rx, chimout);
+	});
+}.value;

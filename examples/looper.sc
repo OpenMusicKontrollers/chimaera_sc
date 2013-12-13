@@ -1,3 +1,5 @@
+#!/usr/bin/sclang
+
 /*
  * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
@@ -21,55 +23,42 @@
  *     distribution.
  */
 
-{ | baseOut, leadOut, baseGrp, leadGrp|
+s.boot;
 
-	// create groups in scsynth via events
-	s.sendMsg('/g_new', baseGrp, \addToHead.asInt, 0);
-	s.sendMsg('/g_new', leadGrp, \addToHead.asInt, 0);
+s.doWhenBooted({
+	var looper, channel, bar, beat, pacemaker;
 
-	SynthDef(\gain, {|amp=0, pan=0, out=0| // define our synth
-		var sig;
-		sig = In.ar(out);
-		ReplaceOut.ar(out, sig*amp);
-	}).add;
+	bar = 20;
+	beat = 21;
+	looper = Looper(s, 4, 10);
 
-	SynthDef(\pan, { // define our synth
-		var base, lead, sig;
-		base = In.ar(baseOut);
-		lead = In.ar(leadOut);
-		base = Pan2.ar(base, -0.5, 0.3);
-		lead = Pan2.ar(lead, 0.5, 0.3);
-		sig = base + lead;
-		ReplaceOut.ar(0, sig);
-	}).add;
+	pacemaker = PaceMaker(s, [bar, beat], 120, 4);
 
-	s.sync;
+	channel = 0;
 
-	// group gains
-	(
-		type: \on,
-		addAction: \addToTail,
-		instrument: \gain,
-		id: baseGrp+50,
-		group: baseGrp,
-		out: baseOut,
-		amp: 0.5
-	).play;
+	OSCFunc({|msg, time, addr, port|
+		var channel, state;
+		channel = msg[1];
+		state = msg[2];
+		if(state != 0) {
+			("starting recording on channel" ++ channel).postln;
+			looper.record(channel, 8, bar);
+		} {
+			("stopping recording on channel" ++ channel).postln;
+			looper.abort(channel);
+		}
+	}, "/looper/record", nil, 1212);
 
-	(
-		type: \on,
-		addAction: \addToTail,
-		instrument: \gain,
-		id: leadGrp+50,
-		group: leadGrp,
-		out: leadOut,
-		amp: 1.0
-	).play;
-
-	(
-		type: \on,
-		addAction: \addToTail,
-		instrument: \pan,
-		group: 0
-	).play;
-}
+	OSCFunc({|msg, time, addr, port|
+		var channel, state;
+		channel = msg[1];
+		state = msg[2];
+		if(state != 0) {
+			("starting playback on channel" ++ channel).postln;
+			looper.play(channel, 0, bar);
+		} {
+			("stopping playback on channel" ++ channel).postln;
+			looper.stop(channel);
+		}
+	}, "/looper/play", nil, 1212);
+})

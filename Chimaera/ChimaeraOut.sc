@@ -22,15 +22,15 @@
  */
 
 ChimaeraOut {
-	*new {|s, n|
-		^super.new.init(s, n);
+	*new {|s, n, groups|
+		^super.new.init(s, n, groups);
 	}
 
 	*initClass {
 		//TODO
 	}
 
-	init {|s, n|
+	init {|s, n, groups|
 		"init".postln;
 	}
 
