@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 Hanspeter Portner (agenthp@users.sf.net)
+ * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,54 +21,46 @@
  *     distribution.
  */
 
-ChimaeraTuio2 {
-	classvar first_frame;
-	var rx, frm, tok, alv, <>engine, blobs, old_blobs, last_fid, last_time, missing, ignore;
+ChimaeraInTuio2 : ChimaeraIn {
+	var firstFrame, frm, tok, alv, blobs, blobsOld, lastFid, lastTime, missing, ignore;
 
-	*new {|s, iRx, iEngine|
-		^super.new.init(s, iRx, iEngine);
-	}
-
-	*classInit {
-		first_frame = 1;
-	}
-
-	initConn {|iRx, iEngine|
-		rx = iRx;
+	init {|s, conf, rx, iEngine|
 		engine = iEngine;
+
+		firstFrame = 1;
 		blobs = Order.new;
-		old_blobs = Array.new;
-		last_fid = 0;
-		last_time = 0;
+		blobsOld = Array.new;
+		lastFid = 0;
+		lastTime = 0;
 		missing = 0;
 		ignore = false;
 
-		// handling tuio messages
-		frm = OSCFunc({|msg, time, addr, port|
+		conf.sendMsg("/chimaera/tuio2/enabled", true); // enable Tuio2 output engine
+
+		frm = OSCFunc({ |msg, time, addr, port|
 			var fid, timestamp;
 
 			fid = msg[1];
 			timestamp = time; //msg[2]; // TODO sclang does not support the OSC timestamp as argument
 
-			if(fid != (last_fid+1) ) {
+			if(fid != (lastFid+1) ) {
 				missing = missing + 1;
-				["message missing", last_fid, fid, missing].postln;
+				["message missing", lastFid, fid, missing].postln;
 			};
 
 			ignore = false;
-			if(timestamp < last_time) {
-				["message late", timestamp, last_time].postln;
+			if(timestamp < lastTime) {
+				["message late", timestamp, lastTime].postln;
 				ignore = true;
 			};
 	
-			last_fid = fid;
-			last_time = timestamp;
+			lastFid = fid;
+			lastTime = timestamp;
 
-			if(engine.start.notNil) {engine.start.value(time)};
-
+			engine.start(time);
 		}, "/tuio2/frm", rx);
 
-		tok = OSCFunc({|msg, time, addr, port|
+		tok = OSCFunc({ |msg, time, addr, port|
 			var o, sid, pid, gid, x, z;
 
 			if(ignore == false) {
@@ -79,11 +71,11 @@ ChimaeraTuio2 {
 				z = msg[5];
 				//a = msg[6]; // not used
 
-				blobs[sid] = [time, sid, pid, gid, x, z];
+				blobs[sid] = [time, sid, gid, pid, x, z];
 			};
 		}, "/tuio2/tok", rx);
 
-		alv = OSCFunc({|msg, time, addr, port|
+		alv = OSCFunc({ |msg, time, addr, port|
 			var n, tmp;
 
 			if(ignore == false) {
@@ -91,41 +83,32 @@ ChimaeraTuio2 {
 
 				n = msg.size;
 				if(n==0) {
-					if(engine.idle.notNil) {engine.idle.value(time);};
+					engine.idle(time);
 				};
 
 				// search for disappeard blobs
-				old_blobs do: {|v|
+				blobsOld do: {|v|
 					if(msg.indexOf(v).isNil) {
-						if(engine.off.notNil) {engine.off.valueArray(blobs[v])};
+						var b = blobs[v];
+						engine.off(b[0], b[1], b[2], b[3]);
 						blobs.removeAt(v);
 					}
 				};
 
 				// search for new blobs
 				msg do: {|v|
-					if(old_blobs.indexOf(v).isNil) {
-						if(engine.on.notNil) {engine.on.valueArray(blobs[v])};
+					var b = blobs[v];
+					if(blobsOld.indexOf(v).isNil) {
+						engine.on(b[0], b[1], b[2], b[3], b[4], b[5]);
 					} {
-						if(engine.set.notNil) {engine.set.valueArray(blobs[v])};
+						engine.set(b[0], b[1], b[2], b[3], b[4], b[5]);
 					};
 				};
 
-				if(engine.end.notNil) {engine.end.value(time)};
+				engine.end(time);
 
-				old_blobs = msg;
+				blobsOld = msg;
 			};
 		}, "/tuio2/alv", rx);
-
-		// engine.start {|time| };
-		// engine.end {|time| };
-		// engine.on {|time, sid, pid, gid, x, z| ["Tuio2 ON:", time, sid, pid, gid, x, z].postln;};
-		// engine.off {|time, sid, pid, gid| ["Tuio2 OFF:", time, sid, pid, gid].postln;};
-		// engine.set {|time, sid, pid, gid, x, z| ["Tuio2 SET:", time, sid, pid, gid, x, z].postln;};
-		// engine.idle {|time| ["Tuio2 IDLE:", time].postln;};
-	}
-
-	init {|s, iRx, iCb|
-		this.initConn(iRx, iCb);
 	}
 }

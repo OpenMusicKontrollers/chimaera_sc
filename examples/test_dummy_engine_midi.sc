@@ -24,88 +24,97 @@
  */
 
 {
-	var rx, tx, chimconf, chimtuio2, midio, lookup, baseID, leadID, effect, bot, ran;
+	var rx, tx, chimconf, midio, baseID, leadID, on, off, set, idle, lookup, effect, bot, ran;
 
 	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
-	tx = NetAddr ("chimaera.local", 4444);
+	tx = NetAddr("chimaera.local", 4444);
 
 	chimconf = ChimaeraConf(s, tx, tx);
-
-	bot = 24 - 0.5;
-	ran = 48 + 1;
-
-	chimconf.sendMsg("/chimaera/sensors", {|msg|
-		var n=msg[0];
-		bot = 3*12 - 0.5 - (n/3 % 12 / 2);
-		ran = n/3 + 1;
-	});
 
 	chimconf.sendMsg("/chimaera/output/enabled", true); // enable output
 	chimconf.sendMsg("/chimaera/output/address", "192.168.1.10:3333"); // send output stream to port 3333
 	chimconf.sendMsg("/chimaera/output/offset", 0.0012); // add 1.2ms offset to bundle timestamps
 	chimconf.sendMsg("/chimaera/output/reset"); // reset all output engines
 
-	chimconf.sendMsg("/chimaera/tuio2/enabled", true); // enable Tuio output engine
-	chimconf.sendMsg("/chimaera/tuio2/long_header", false); // use short Tuio frame header (default)
+	chimconf.sendMsg("/chimaera/dummy/enabled", true); // enable dummy engine
+
+	bot = 23.5;
+	ran = 49;
+	chimconf.sendMsg("/chimaera/sensors", {|msg|
+		var n=msg[0];
+		Routine.run({
+			bot = 3*12 - 0.5 - (n/3 % 12 / 2);
+			ran = n/3 + 1;
+		}, clock:AppClock);
+	});
 
 	baseID = 0;
 	leadID = 1;
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group/set", baseID, ChimaeraConf.north, 0.0, 1.0); // add group
-	chimconf.sendMsg("/chimaera/group/set", leadID, ChimaeraConf.south, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group", baseID, ChimaeraConf.north, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/chimaera/group", leadID, ChimaeraConf.south, 0.0, 1.0, false); // add group
 
 	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
-	rx = NetAddr ("chimaera.local", 3333);
-	chimtuio2 = ChimaeraTuio2(s, rx);
+	rx = NetAddr("chimaera.local", 3333);
 
 	MIDIClient.init;
 	//midio = MIDIOut(0, MIDIClient.destinations[0].uid); // use this on MacOS, Windows to connect to the MIDI stream of choice
 	midio = MIDIOut(0); // use this on Linux, as patching is usually done via ALSA/JACK
 	midio.latency = 0; // send MIDI with no delay, instantaneously
 
-	lookup = Order.new; // lookup table of currently active keys
+	lookup = Order.new;
 	effect = 0x07; // volume
 
-	chimtuio2.start = { |time|
-		midio.latency = time - SystemClock.beats;
-	};
+	on = OSCFunc({|msg, time, addr, port|
+		var sid, gid, x, y, midikey, bend, cc;
+		sid = msg[1];
+		gid = msg[2];
+		x = msg[4];
+		y = msg[5];
 
-	chimtuio2.end = { |time|
-		midio.latency = 0;
-	};
-
-	chimtuio2.on = { |time, sid, pid, gid, x, z| // set callback function for blob on-events
-		var midikey, cc;
-		midikey = x*ran + bot;
-		cc = (z*0x3fff).asInteger;
-	
-		//(time-SystemClock.beats).postln; //uncomment this to check whether there are late messages (if so, adjust the offset on the device)
-
+		midikey = x * ran + bot;
 		lookup[sid] = midikey.round;
+		bend = midikey - lookup[sid] / ran * 0x2000 + 0x1fff;
+		cc = (y*0x3fff).asInteger;
+
+		midio.latency = time - SystemClock.beats;
 		midio.noteOn(gid, lookup[sid], 0x7f); // we're using the group id (gid) as MIDI channel number
-		midio.bend(gid, midikey-lookup[sid]/ran*0x2000+0x2000); // we're using a pitchbend span of ran*100 cents
+		midio.bend(gid, bend);
 		midio.control(gid, effect | 0x20, cc & 0x7f); // effect LSB
 		midio.control(gid, effect | 0x00, cc >> 7); // effect MSB
-	};
+	}, "/on", rx);
 
-	chimtuio2.off = { |time, sid, pid, gid| // set callback function for blob off-events
+	off = OSCFunc({|msg, time, addr, port|
+		var sid, gid;
+		sid = msg[1];
+		gid = msg[2];
+
+		midio.latency = time - SystemClock.beats;
 		midio.noteOff(gid, lookup[sid], 0x00);
 		lookup[sid] = nil;
-	};
+	}, "/off", rx);
 
-	chimtuio2.set = { |time, sid, pid, gid, x, z| // set callback function for blob set-events
-		var midikey, cc;
-		midikey = x*ran + bot;
-		cc = (z*0x3fff).asInteger;
+	set = OSCFunc({|msg, time, addr, port|
+		var sid, gid, x, y, midikey, bend, cc;
+		sid = msg[1];
+		gid = msg[2];
+		x = msg[4];
+		y = msg[5];
 
-		midio.bend(gid, midikey-lookup[sid]/ran*0x2000+0x2000); // we're using a pitchbend span of ran*100 cents
+		midikey = x * ran + bot;
+		bend = midikey - lookup[sid] / ran * 0x2000 + 0x1fff;
+		cc = (y*0x3fff).asInteger;
+
+		midio.latency = time - SystemClock.beats;
+		midio.bend(gid, bend);
 		midio.control(gid, effect | 0x20, cc & 0x7f); // effect LSB
 		midio.control(gid, effect | 0x00, cc >> 7); // effect MSB
-	};
+	}, "/set", rx);
 
-	chimtuio2.idle = { |time|
+	idle = OSCFunc({|msg, time, addr, port|
+		midio.latency = time - SystemClock.beats;
 		midio.allNotesOff(baseID);
 		midio.allNotesOff(leadID);
-	};
+	}, "/idle", rx);
 }.value;

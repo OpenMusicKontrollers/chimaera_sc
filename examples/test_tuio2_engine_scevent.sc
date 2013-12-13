@@ -23,45 +23,50 @@
  *     distribution.
  */
 
-Server.supernova;
 s.options.blockSize = 0x10;
 s.options.memSize = 0x10000;
 s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var inst, txrx, chimconf, instruments, baseOut, leadOut, baseGrp, leadGrp;
+	var rx, tx, chimconf, chimtuio2, instruments, baseOut, leadOut, baseGrp, leadGrp, engine;
 
-	thisProcess.openUDPPort(4444);
-	txrx = NetAddr ("chimaera.local", 4444);
+	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
+	tx = NetAddr ("chimaera.local", 4444);
 
-	chimconf = ChimaeraConf(s, txrx, txrx);
+	chimconf = ChimaeraConf(s, tx, tx);
 
-	chimconf.sendMsg("/chimaera/output/enabled", true); // enable output socket on device
-	chimconf.sendMsg("/chimaera/output/address", "192.168.1.10:57110"); // send to scsynth port
-	chimconf.sendMsg("/chimaera/output/offset", 0.001); // add 1ms offset to bundle timestamps
+	chimconf.sendMsg("/chimaera/output/enabled", true); // enable output
+	chimconf.sendMsg("/chimaera/output/address", "192.168.1.10:3333"); // send output stream to port 3333
+	chimconf.sendMsg("/chimaera/output/offset", 0.002); // add 1ms offset to bundle timestamps
 	chimconf.sendMsg("/chimaera/output/reset"); // reset all output engines
-
-	chimconf.sendMsg("/chimaera/interpolation/order", 2); // cubic interpolation
 
 	baseOut = 0;
 	leadOut = 1;
 	baseGrp = 100 + baseOut;
 	leadGrp = 100 + leadOut;
 
-	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group/set", baseOut, ChimaeraConf.north, 0.0, 1.0); // add group
-	chimconf.sendMsg("/chimaera/group/set", leadOut, ChimaeraConf.south, 0.0, 1.0); // add group
+	// create groups in sclang
+	instruments = Order.new;
+	instruments[baseOut] = \base;
+	instruments[leadOut] = \lead;
 
-	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
-	chimconf.sendMsg("/chimaera/scsynth/group", baseOut, \base, 200, baseGrp, baseOut, 0, true, true, \addToHead.asInt, false);
-	chimconf.sendMsg("/chimaera/scsynth/group", leadOut, \lead, 200, baseGrp, leadOut, 3, false, false, \addToHead.asInt, true);
+	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
+	chimconf.sendMsg("/chimaera/group", baseOut, ChimaeraConf.north, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/chimaera/group", leadOut, ChimaeraConf.south, 0.0, 1.0, false); // add group
+
+	chimconf.sendMsg("/chimaera/tuio2/enabled", true); // enable Tuio output engine
+	chimconf.sendMsg("/chimaera/tuio2/long_header", false); // use short Tuio frame header (default)
 
 	chimconf.sendMsg("/chimaera/sensors", {|msg|
 		var n=msg[0];
-		Routine.run({
-			"../templates/single_group.sc".load.value(baseGrp);
-			"../instruments/pluck_4f.sc".load.value(\base, n);
-		}, clock:AppClock);
+		"templates/two_groups_separate.sc".load.value(baseOut, leadOut, baseGrp, leadGrp);
+		"scsynth_instrument_chooser_2f.sc".load.value(n);
 	});
-});
+
+	engine = "engines/scevent_2f.sc".load.value(instruments);
+
+	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
+	rx = NetAddr ("chimaera.local", 3333);
+	chimtuio2 = ChimaeraTuio2(s, rx, engine);
+})

@@ -21,45 +21,40 @@
  *     distribution.
  */
 
-{|n|
-	var baseInst, leadInst, loadInst, win, adrop, bdrop;
+ChimaeraOut {
+	*new {|s, n|
+		^super.new.init(s, n);
+	}
 
-	/*
-	 * populate instrument name arrays
-	 */
-	baseInst = Array.new(64);
-	leadInst = Array.new(64);
-	p = PathName("../instruments");
-	p.filesDo({|n|
-		var name = n.fileNameWithoutExtension;
-		baseInst.add(name);
-		leadInst.add(name);
-	});
+	*initClass {
+		//TODO
+	}
 
-	/*
-	 * load instrument
-	 */
-	loadInst = {|group, inst|
-		//s.sendMsg(\n_set, 'gate', 0);
-		("../instruments/"++inst++".sc").load.value(group, n);
-	};
+	init {|s, n|
+		"init".postln;
+	}
 
-	loadInst.value(\base, baseInst[0]);
-	loadInst.value(\lead, leadInst[0]);
+	start { |time|
+		"start".postln;
+	}
 
-	win = Window.new("Instruments", Rect(200,200,400,100)).front;
+	end { |time|
+		"end".postln;
+	}
 
-	adrop = PopUpMenu(win, Rect(10,10,180,20));
-	adrop.items = baseInst;
-	adrop.action = {|menu|
-		//[menu.value, menu.item].postln;
-		loadInst.value(\base, menu.item);
-	};
+	on { |time, sid, gid, pid, x, z|
+		"on".postln;
+	}
 
-	bdrop = PopUpMenu(win, Rect(200,10,180,20));
-	bdrop.items = leadInst;
-	bdrop.action = {|menu|
-		//[menu.value, menu.item].postln;
-		loadInst.value(\lead, menu.item);
-	};
+	off { |time, sid, gid, pid|
+		"off".postln;
+	}
+
+	set { |time, sid, gid, pid, x, z|
+		"set".postln;
+	}
+
+	idle { |time|
+		"idle".postln;
+	}
 }

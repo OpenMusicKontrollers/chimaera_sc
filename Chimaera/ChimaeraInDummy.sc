@@ -1,7 +1,5 @@
-#!/usr/bin/sclang
-
 /*
- * Copyright (c) 2012-2013 Hanspeter Portner (agenthp@users.sf.net)
+ * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,13 +21,42 @@
  *     distribution.
  */
 
-{
-	var rx, sl;
+ChimaeraInDummy : ChimaeraIn {
+	var on, off, set, idle, last;
 
-	rx = NetAddr ("localhost", 9951);
-	sl = SooperLooper(s, rx);
+	init {|s, conf, rx, iEngine|
+		engine = iEngine;
 
-	SystemClock.sched(2, {sl.record(0)});
-	SystemClock.sched(8, {sl.record(0)});
+		last = 0;
 
-}.value;
+		conf.sendMsg("/chimaera/dummy/enabled", true); // enable dummy output engine
+
+		on = OSCFunc({ |msg, time, addr, port|
+			update(time);
+			engine.on(time, msg[1], msg[2], msg[3], msg[4], msg[5]);
+		}, "/on", rx);
+
+		off = OSCFunc({ |msg, time, addr, port|
+			update(time);
+			engine.off(time, msg[1], msg[2], msg[3]);
+		}, "/off", rx);
+
+		set = OSCFunc({ |msg, time, addr, port|
+			update(time);
+			engine.set(time, msg[1], msg[2], msg[3], msg[4], msg[5]);
+		}, "/set", rx);
+
+		idle = OSCFunc({ |msg, time, addr, port|
+			update(time);
+			engine.idle(time);
+		}, "/idle", rx);
+	}
+
+	update {|time|
+		if(time != last) {
+			engine.end(last);
+			engine.start(time);
+			last = time;
+		}
+	}
+}

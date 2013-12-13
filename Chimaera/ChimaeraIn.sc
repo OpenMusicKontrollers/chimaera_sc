@@ -1,7 +1,5 @@
-#!/usr/bin/sclang
-
 /*
- * Copyright (c) 2012-2013 Hanspeter Portner (agenthp@users.sf.net)
+ * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,17 +21,18 @@
  *     distribution.
  */
 
-s.boot;
+ChimaeraIn {
+	var engine;
 
-s.doWhenBooted({
-	var tx, krak;
+	*new {|s, conf, rx, iEngine|
+		^super.new.init(s, conf, rx, iEngine);
+	}
 
-	tx = NetAddr ("192.168.1.188", 9999);
-	//tx = NetAddr ("localhost", 1212);
-	krak = Kraken(s, tx);
-	
-	//{krak.ar(0, SinOsc.ar(0.5, mul:1000, add:1000).round, 10)}.play;
-	{krak.ar(0, PinkNoise.ar(5000), 10)}.play;
+	*initClass {
+		//TODO
+	}
 
-	//{krak.kr(1, SinOsc.kr(220), 20000)}.play;
-});
+	init {|s, conf, rx, iEngine|
+		engine = iEngine;
+	}
+}

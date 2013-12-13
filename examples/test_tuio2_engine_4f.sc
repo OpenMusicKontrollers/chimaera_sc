@@ -29,7 +29,7 @@ s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var rx, tx, chimconf, chimtuio2, baseOut, leadOut, baseGrp, bndl;
+	var rx, tx, chimconf, chimtuio2, baseOut, leadOut, baseGrp, event;
 
 	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
 	tx = NetAddr ("chimaera.local", 4444);
@@ -50,78 +50,17 @@ s.doWhenBooted({
 
 	chimconf.sendMsg("/chimaera/sensors", {|msg|
 		var n=msg[0];
-		Routine.run({
-			"../templates/single_group.sc".load.value(baseGrp);
-			"../instruments/pluck_4f.sc".load.value(\base, n);
-		}, clock:AppClock);
+		"templates/single_group.sc".load.value(baseGrp);
+		"../instruments/pluck_4f.sc".load.value(\base, n);
 	});
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group/set", baseOut, ChimaeraConf.north, 0.0, 1.0); // add group
-	chimconf.sendMsg("/chimaera/group/set", leadOut, ChimaeraConf.south, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group", baseOut, ChimaeraConf.north, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/chimaera/group", leadOut, ChimaeraConf.south, 0.0, 1.0, false); // add group
+
+	engine = "../engines/scevent_4f.sc".load.value(baseGrp, baseOut);
 
 	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
 	rx = NetAddr ("chimaera.local", 3333);
-	chimtuio2 = ChimaeraTuio2(s, rx);
-
-	bndl = List.new(8);
-
-	chimtuio2.start = { |time|
-		bndl.clear;
-	};
-
-	chimtuio2.end = { |time|
-		var lag;
-
-		lag = time - SystemClock.beats;	
-		s.listSendBundle(lag, bndl);
-	};
-
-	chimtuio2.on = { |time, sid, pid, gid, x, z|
-		var lag;
-
-		sid = sid + 1000; // recycle synth ids between 1000-1999
-		lag = time - SystemClock.beats;	
-		//["on", time, sid, lag].postln;
-
-		if(gid==baseOut) {
-			s.sendMsg('/s_new', \base, sid, \addToHead, baseGrp, 'out', baseOut, 'gate', 0);
-			bndl = bndl.add(['/n_set', sid, 0, x, 1, z, 2, pid, 'gate', 1]);
-		} {
-			bndl = bndl.add(['/n_set', baseGrp, 3, x, 4, z, 5, pid]);
-		};
-	};
-
-	chimtuio2.off = { |time, sid, pid, gid|
-		var lag;
-
-		sid = sid + 1000;
-		lag = time - SystemClock.beats;	
-		//["off", time, sid].postln;
-
-		if(gid==baseOut) {
-			bndl = bndl.add(['/n_set', sid, 'gate', 0]);
-		};
-	};
-
-	chimtuio2.set = { |time, sid, pid, gid, x, z|
-		var lag;
-
-		sid = sid + 1000;
-		lag = time - SystemClock.beats;	
-
-		if(gid==baseOut) {
-			bndl = bndl.add(['/n_set', sid, 0, x, 1, z, 2, pid]);
-		} {
-			bndl = bndl.add(['/n_set', baseGrp, 3, x, 4, z, 5, pid]);
-		};
-	};
-
-	chimtuio2.idle = { |time|
-		var lag;
-	
-		lag = time - SystemClock.beats;
-
-		s.sendBundle(lag, ['/n_set', baseGrp, 'gate', 0]);
-	};
+	chimtuio2 = ChimaeraTuio2(s, rx, engine);
 })

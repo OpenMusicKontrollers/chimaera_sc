@@ -54,18 +54,24 @@ ChimaeraCal {
 			{ conf.sendMsg("/chimaera/calibration/start"); },
 			{ conf.sendMsg("/chimaera/calibration/zero"); },
 			{ conf.sendMsg("/chimaera/calibration/min", {|msg|
-				Routine.run({num.visible=true; is.string="Sensor #"++msg[0]; is.visible=true;}, clock:AppClock);
+				num.visible=true;
+				is.string="Sensor #"++msg[0];
+				is.visible=true;
 			})},
 			{ conf.sendMsg("/chimaera/calibration/mid", num.value); },
 			{ conf.sendMsg("/chimaera/calibration/mid", num.value); },
 			{ conf.sendMsg("/chimaera/calibration/mid", num.value, {|msg|
-				Routine.run({num.value=1; num.visible=false;}, clock:AppClock);
+				num.value=1;
+				num.visible=false;
 			})},
 			{ conf.sendMsg("/chimaera/calibration/max", {|msg|
-				Routine.run({num.visible=true; is.visible=false;}, clock:AppClock);
+				num.visible=true;
+				is.visible=false;
 			})},
 			{ conf.sendMsg("/chimaera/calibration/end", num.value, {|msg|
-				Routine.run({num.value=0; num.visible=false; is.visible=false;}, clock:AppClock);
+				num.value=0;
+				num.visible=false;
+				is.visible=false;
 			})},
 			{ conf.sendMsg("/chimaera/calibration/save", 0); },
 		];

@@ -30,10 +30,10 @@ s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var inst, txrx, chimconf, instruments, baseOut, leadOut, baseGrp, leadGrp;
+	var txrx, chimconf, baseOut, leadOut, baseGrp, leadGrp;
 
 	thisProcess.openUDPPort(4444);
-	txrx = NetAddr ("chimaera.local", 4444);
+	txrx = NetAddr("chimaera.local", 4444);
 
 	chimconf = ChimaeraConf(s, txrx, txrx);
 
@@ -50,18 +50,18 @@ s.doWhenBooted({
 	leadGrp = 100 + leadOut;
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group/set", baseOut, ChimaeraConf.north, 0.0, 1.0); // add group
-	chimconf.sendMsg("/chimaera/group/set", leadOut, ChimaeraConf.south, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group", baseOut, ChimaeraConf.north, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/chimaera/group", leadOut, ChimaeraConf.south, 0.0, 1.0, false); // add group
 
 	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
 	chimconf.sendMsg("/chimaera/scsynth/group", baseOut, \base, 200, baseGrp, baseOut, 0, true, true, \addToHead.asInt, false);
-	chimconf.sendMsg("/chimaera/scsynth/group", leadOut, \lead, 200, leadGrp, leadOut, 0, true, true, \addToHead.asInt, false);
+	chimconf.sendMsg("/chimaera/scsynth/group", leadOut, \lead, 200, baseGrp, leadOut, 3, false, false, \addToHead.asInt, true);
 
 	chimconf.sendMsg("/chimaera/sensors", {|msg|
 		var n=msg[0];
 		Routine.run({
-			"../templates/two_groups_separate.sc".load.value(baseOut, leadOut, baseGrp, leadGrp);
-			"scsynth_instrument_chooser.sc".load.value(n);
+			"templates/single_group.sc".load.value(baseGrp);
+			"scsynth_instrument_chooser_4f.sc".load.value(n);
 		}, clock:AppClock);
 	});
 });

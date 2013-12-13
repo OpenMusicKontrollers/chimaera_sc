@@ -1,3 +1,5 @@
+#!/usr/bin/sclang
+
 /*
  * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
@@ -21,29 +23,25 @@
  *     distribution.
  */
 
-/*
- * low-pass filtered pulse width oscillator
- *
- * x := freq
- * y := cutoff frequency of low-pass filter
- */
+{
+	var rx, tx, chimconf, chimin, chimout;
 
-{|synthname, n|
-	var bot = 3*12 - 0.5 - (n/3 % 12 / 2);
-	var top = n/3 + bot + 1;
+	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
+	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
 
-	SynthDef(synthname, {|freq=0, amp=0, p=0, freq2=0, amp2=0, p2=0, gate=1, out=0|
-		var suicide, up=0.1, down=0.5, env, sig, cutoff;
+	rx = NetAddr ("chimaera.local", 3333);
+	tx = NetAddr ("chimaera.local", 4444);
 
-		suicide = DetectSilence.kr(Line.kr(0.1, 0.0, 1.0)+gate, 0.0001, down, doneAction:2);
-		env = Linen.kr(gate, up, 1.0, down);
+	chimconf = ChimaeraConf(s, tx, tx);
 
-		freq = LinExp.kr(freq, 0, 1, bot.midicps, top.midicps);
-		freq2 = LinExp.kr(freq2, 0, 1, bot.midicps, top.midicps);
-
-		sig = SyncSaw.ar(freq, freq2, mul:amp2*env);
-		sig = RLPF.ar(sig, amp*1900+100, 0.1);
-		sig = FreeVerb.ar(sig);
-		OffsetOut.ar(out, sig);
-	}).add;
-}
+	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
+	chimconf.sendMsg("/chimaera/group", 0, ChimaeraConf.north, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/chimaera/group", 1, ChimaeraConf.south, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/chimaera/sensors", {|msg|
+		var n = msg[0];
+		chimout = ChimaeraOutMidi(s, n);
+		chimout.effect = 0x07;
+		chimout.doublePrecision = true;
+		chimin = ChimaeraInTuio2(s, chimconf, rx, chimout);
+	});
+}.value;

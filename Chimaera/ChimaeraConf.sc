@@ -64,7 +64,7 @@ ChimaeraConf {
 
 	success {|id, msg|
 		if (cb[id].isFunction) {
-			cb[id].value(msg);
+			cb.[id].value(msg);
 		};
 		cb.removeAt(id);
 		("Chimaera request #"++id+"succeeded:").postln;
