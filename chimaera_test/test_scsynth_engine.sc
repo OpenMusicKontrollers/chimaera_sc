@@ -30,7 +30,9 @@ s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var inst, txrx, chimconf, instruments, baseOut, leadOut, baseGrp, leadGrp;
+	var rate, inst, txrx, chimconf, instruments, baseOut, leadOut, baseGrp, leadGrp;
+
+	rate = 2500;
 
 	thisProcess.openUDPPort(4444);
 	txrx = NetAddr ("chimaera.local", 4444);
@@ -39,7 +41,7 @@ s.doWhenBooted({
 
 	chimconf.sendMsg("/chimaera/output/enabled", true); // enable output socket on device
 	chimconf.sendMsg("/chimaera/output/address", "192.168.1.10:57110"); // send to scsynth port
-	chimconf.sendMsg("/chimaera/output/offset", 0.001); // add 1ms offset to bundle timestamps
+	chimconf.sendMsg("/chimaera/output/offset", 2/rate+1e-3); // add 1ms offset to bundle timestamps
 	chimconf.sendMsg("/chimaera/output/reset"); // reset all output engines
 
 	chimconf.sendMsg("/chimaera/interpolation/order", 2); // cubic interpolation
@@ -50,8 +52,8 @@ s.doWhenBooted({
 	leadGrp = 100 + leadOut;
 
 	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group/set", baseOut, ChimaeraConf.north, 0.0, 1.0); // add group
-	chimconf.sendMsg("/chimaera/group/set", leadOut, ChimaeraConf.south, 0.0, 1.0); // add group
+	chimconf.sendMsg("/chimaera/group", baseOut, ChimaeraConf.north, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/chimaera/group", leadOut, ChimaeraConf.south, 0.0, 1.0, false); // add group
 
 	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
 	chimconf.sendMsg("/chimaera/scsynth/group", baseOut, \base, 200, baseGrp, baseOut, 0, true, true, \addToHead.asInt, false);
