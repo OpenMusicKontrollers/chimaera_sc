@@ -29,7 +29,7 @@ ChimaeraInDummy : ChimaeraIn {
 
 		last = 0;
 
-		conf.sendMsg("/chimaera/dummy/enabled", true); // enable dummy output engine
+		conf.sendMsg("/engines/dummy/enabled", true); // enable dummy output engine
 
 		on = OSCFunc({ |msg, time, addr, port|
 			this.update(time);

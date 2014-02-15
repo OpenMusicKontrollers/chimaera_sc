@@ -43,22 +43,22 @@ s.doWhenBooted({
 
 	chimconf = ChimaeraConf(s, tx, tx);
 
-	chimconf.sendMsg("/chimaera/output/reset");
-	chimconf.sendMsg("/chimaera/output/address", "melamori.local:57110");
+	chimconf.sendMsg("/engines/reset");
+	chimconf.sendMsg("/engines/address", "melamori.local:57110");
 
-	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group", 0, ChimaeraConf.north, 0.0, 1.0, false); // add group
-	chimconf.sendMsg("/chimaera/group", 1, ChimaeraConf.south, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/sensors/group/clear"); // clear groups
+	chimconf.sendMsg("/sensors/group", 0, ChimaeraConf.north, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/sensors/group", 1, ChimaeraConf.south, 0.0, 1.0, false); // add group
 
-	chimconf.sendMsg("/chimaera/scsynth/enabled", true); // enable scsynth output engine
-	chimconf.sendMsg("/chimaera/scsynth/group", 0, \base, sidOffset, 0+gidOffset, 0, 0, true, true, \addToHead.asInt, false);
-	chimconf.sendMsg("/chimaera/scsynth/group", 1, \lead, sidOffset, 1+gidOffset, 1, 0, true, true, \addToHead.asInt, false);
+	chimconf.sendMsg("/engines/scsynth/enabled", true); // enable scsynth output engine
+	chimconf.sendMsg("/engines/scsynth/group", 0, \base, sidOffset, 0+gidOffset, 0, 0, true, true, \addToHead.asInt, false);
+	chimconf.sendMsg("/engines/scsynth/group", 1, \lead, sidOffset, 1+gidOffset, 1, 0, true, true, \addToHead.asInt, false);
 
 	s.sendMsg('/g_new', 0+gidOffset, \addToHead.asInt, 0);
 	s.sendMsg('/g_new', 1+gidOffset, \addToHead.asInt, 0);
 	s.sync;
 
-	chimconf.sendMsg("/chimaera/sensors", {|msg|
+	chimconf.sendMsg("/sensors/number", {|msg|
 		var n=msg[0];
 		Routine.run({
 			"./instruments2F.sc".load.value(n);

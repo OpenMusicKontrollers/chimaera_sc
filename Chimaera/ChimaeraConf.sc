@@ -43,17 +43,21 @@ ChimaeraConf {
 
 		success = OSCFunc({|msg, time, addr, port|
 			var id;
+			var dest;
 		
 			msg.removeAt(0); // path
 			id = msg.removeAt(0);
+			dest = msg.removeAt(0);
 			this.success(id, msg);
 		}, "/success", rx);
 
 		fail = OSCFunc({|msg, time, addr, port|
 			var id;
+			var dest;
 
 			msg.removeAt(0); // path
 			id = msg.removeAt(0);
+			dest = msg.removeAt(0);
 			this.fail(id, msg);
 		}, "/fail", rx);
 	}

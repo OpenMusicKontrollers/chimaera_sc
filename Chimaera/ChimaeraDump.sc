@@ -33,8 +33,8 @@ ChimaeraDump {
 	}
 
 	init {|s, conf, rx|
-		conf.sendMsg("/chimaera/dump/enabled", true); // enable sensor array dump
-		conf.sendMsg("/chimaera/sensors", {|n|
+		conf.sendMsg("/engines/dump/enabled", true); // enable sensor array dump
+		conf.sendMsg("/sensors/number", {|n|
 			var geo;
 			var h = 100;
 			var h1 = 1 / h;

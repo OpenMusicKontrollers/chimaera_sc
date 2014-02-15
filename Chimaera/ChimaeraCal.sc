@@ -51,29 +51,29 @@ ChimaeraCal {
 		text.string = desc[0];
 
 		acts = [
-			{ conf.sendMsg("/chimaera/calibration/start"); },
-			{ conf.sendMsg("/chimaera/calibration/zero"); },
-			{ conf.sendMsg("/chimaera/calibration/min", {|msg|
+			{ conf.sendMsg("/calibration/start"); },
+			{ conf.sendMsg("/calibration/zero"); },
+			{ conf.sendMsg("/calibration/min", {|msg|
 				num.visible=true;
 				is.string="Sensor #"++msg[0];
 				is.visible=true;
 			})},
-			{ conf.sendMsg("/chimaera/calibration/mid", num.value); },
-			{ conf.sendMsg("/chimaera/calibration/mid", num.value); },
-			{ conf.sendMsg("/chimaera/calibration/mid", num.value, {|msg|
+			{ conf.sendMsg("/calibration/mid", num.value); },
+			{ conf.sendMsg("/calibration/mid", num.value); },
+			{ conf.sendMsg("/calibration/mid", num.value, {|msg|
 				num.value=1;
 				num.visible=false;
 			})},
-			{ conf.sendMsg("/chimaera/calibration/max", {|msg|
+			{ conf.sendMsg("/calibration/max", {|msg|
 				num.visible=true;
 				is.visible=false;
 			})},
-			{ conf.sendMsg("/chimaera/calibration/end", num.value, {|msg|
+			{ conf.sendMsg("/calibration/end", num.value, {|msg|
 				num.value=0;
 				num.visible=false;
 				is.visible=false;
 			})},
-			{ conf.sendMsg("/chimaera/calibration/save", 0); },
+			{ conf.sendMsg("/calibration/save", 0); },
 		];
 
 		button = Button.new(win, Rect(10, 10, 380, 40));

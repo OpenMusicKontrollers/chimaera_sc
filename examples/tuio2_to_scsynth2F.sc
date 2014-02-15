@@ -39,13 +39,13 @@ s.doWhenBooted({
 
 	chimconf = ChimaeraConf(s, tx, tx);
 
-	chimconf.sendMsg("/chimaera/output/reset");
+	chimconf.sendMsg("/engines/reset");
 
-	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group", 0, ChimaeraConf.north, 0.0, 1.0, false); // add group
-	chimconf.sendMsg("/chimaera/group", 1, ChimaeraConf.south, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/sensors/group/clear"); // clear groups
+	chimconf.sendMsg("/sensors/group", 0, ChimaeraConf.north, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/sensors/group", 1, ChimaeraConf.south, 0.0, 1.0, false); // add group
 
-	chimconf.sendMsg("/chimaera/sensors", {|msg|
+	chimconf.sendMsg("/sensors/number", {|msg|
 		var n = msg[0];
 		chimout = ChimaeraOutSCSynth2F(s, n, [\base, \lead]);
 		chimin = ChimaeraInTuio2(s, chimconf, rx, chimout);

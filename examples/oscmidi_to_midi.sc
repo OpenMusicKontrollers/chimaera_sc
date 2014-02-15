@@ -34,22 +34,22 @@
 
 	chimconf = ChimaeraConf(s, tx, tx);
 
-	chimconf.sendMsg("/chimaera/output/reset"); // reset all output engines
+	chimconf.sendMsg("/engines/reset"); // reset all output engines
 
-	chimconf.sendMsg("/chimaera/group/clear"); // clear groups
-	chimconf.sendMsg("/chimaera/group", 0, ChimaeraConf.north, 0.0, 1.0, false); // add group
-	chimconf.sendMsg("/chimaera/group", 1, ChimaeraConf.south, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/sensors/group/clear"); // clear groups
+	chimconf.sendMsg("/sensors/group", 0, ChimaeraConf.north, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/sensors/group", 1, ChimaeraConf.south, 0.0, 1.0, false); // add group
 
 	effect = 0x07; // volume
-	chimconf.sendMsg("/chimaera/sensors", {|msg|
+	chimconf.sendMsg("/sensors/number", {|msg|
 		var n=msg[0];
 		Routine.run({
 			var bot = 3*12 - 0.5 - (n/3 % 12 / 2);
 			var ran = n/3 + 1;
-			chimconf.sendMsg("/chimaera/oscmidi/enabled", true); // enable OSCMidi output engine
-			chimconf.sendMsg("/chimaera/oscmidi/offset", bot); // lowest MIDI Note
-			chimconf.sendMsg("/chimaera/oscmidi/range", ran); // MIDI Note range
-			chimconf.sendMsg("/chimaera/oscmidi/effect", effect); // effect corresponding to z-direction
+			chimconf.sendMsg("/engines/oscmidi/enabled", true); // enable OSCMidi output engine
+			chimconf.sendMsg("/engines/oscmidi/offset", bot); // lowest MIDI Note
+			chimconf.sendMsg("/engines/oscmidi/range", ran); // MIDI Note range
+			chimconf.sendMsg("/engines/oscmidi/effect", effect); // effect corresponding to z-direction
 		}, clock:AppClock);
 	});
 

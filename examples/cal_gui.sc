@@ -34,10 +34,10 @@
 
 	chimconf = ChimaeraConf(s, tx, tx);
 
-	chimconf.sendMsg("/chimaera/output/enabled", true); // enable output
-	chimconf.sendMsg("/chimaera/output/address", "192.168.1.10:3333"); // send output stream to port 3333
-	chimconf.sendMsg("/chimaera/output/offset", 0.001); // add 1ms offset to bundle timestamps
-	chimconf.sendMsg("/chimaera/output/reset"); // reset all output engines
+	chimconf.sendMsg("/engines/enabled", true); // enable output
+	chimconf.sendMsg("/engines/address", "192.168.1.10:3333"); // send output stream to port 3333
+	chimconf.sendMsg("/engines/offset", 0.001); // add 1ms offset to bundle timestamps
+	chimconf.sendMsg("/engines/reset"); // reset all output engines
 
 	chimdump = ChimaeraDump(s, chimconf, rx);
 	chimcal = ChimaeraCal(s, chimconf);

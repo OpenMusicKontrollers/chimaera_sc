@@ -35,7 +35,7 @@ ChimaeraInTuio2 : ChimaeraIn {
 		missing = 0;
 		ignore = false;
 
-		conf.sendMsg("/chimaera/tuio2/enabled", true); // enable Tuio2 output engine
+		conf.sendMsg("/engines/tuio2/enabled", true); // enable Tuio2 output engine
 
 		frm = OSCFunc({ |msg, time, addr, port|
 			var fid, timestamp;
