@@ -29,7 +29,9 @@ s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var rx, tx, chimconf, chimin, chimout;
+	var hostname, rx, tx, chimconf, chimin, chimout;
+
+	hostname = "hostname".unixCmdGetStdOutLines[0]++".local";
 
 	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
 	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
@@ -40,10 +42,11 @@ s.doWhenBooted({
 	chimconf = ChimaeraConf(s, tx, tx);
 
 	chimconf.sendMsg("/engines/reset");
+	chimconf.sendMsg("/engines/address", hostname++":"++3333); // send output stream to port 3333
 
-	chimconf.sendMsg("/sensors/group/clear"); // clear groups
-	chimconf.sendMsg("/sensors/group", 0, ChimaeraConf.north, 0.0, 1.0, false); // add group
-	chimconf.sendMsg("/sensors/group", 1, ChimaeraConf.south, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/sensors/group/reset"); // reset groups
+	chimconf.sendMsg("/sensors/group/attributes", 0, ChimaeraConf.north, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/sensors/group/attributes", 1, ChimaeraConf.south, 0.0, 1.0, false); // add group
 
 	chimconf.sendMsg("/sensors/number", {|msg|
 		var n = msg[0];

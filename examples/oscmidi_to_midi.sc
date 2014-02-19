@@ -24,7 +24,9 @@
  */
 
 {
-	var rx, tx, chimconf, midio, func, effect;
+	var hostname, rx, tx, chimconf, midio, func, effect;
+
+	hostname = "hostname".unixCmdGetStdOutLines[0]++".local";
 
 	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
 	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
@@ -35,21 +37,23 @@
 	chimconf = ChimaeraConf(s, tx, tx);
 
 	chimconf.sendMsg("/engines/reset"); // reset all output engines
+	chimconf.sendMsg("/engines/address", hostname++":"++3333); // send output stream to port 3333
 
-	chimconf.sendMsg("/sensors/group/clear"); // clear groups
-	chimconf.sendMsg("/sensors/group", 0, ChimaeraConf.north, 0.0, 1.0, false); // add group
-	chimconf.sendMsg("/sensors/group", 1, ChimaeraConf.south, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/sensors/group/reset"); // reset groups
+	chimconf.sendMsg("/sensors/group/attributes", 0, ChimaeraConf.north, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/sensors/group/attributes", 1, ChimaeraConf.south, 0.0, 1.0, false); // add group
 
 	effect = 0x07; // volume
+	chimconf.sendMsg("/engines/oscmidi/enabled", true); // enable OSCMidi output engine
+	chimconf.sendMsg("/engines/oscmidi/effect", effect); // effect corresponding to z-direction
+
 	chimconf.sendMsg("/sensors/number", {|msg|
 		var n=msg[0];
 		Routine.run({
 			var bot = 3*12 - 0.5 - (n/3 % 12 / 2);
 			var ran = n/3 + 1;
-			chimconf.sendMsg("/engines/oscmidi/enabled", true); // enable OSCMidi output engine
 			chimconf.sendMsg("/engines/oscmidi/offset", bot); // lowest MIDI Note
 			chimconf.sendMsg("/engines/oscmidi/range", ran); // MIDI Note range
-			chimconf.sendMsg("/engines/oscmidi/effect", effect); // effect corresponding to z-direction
 		}, clock:AppClock);
 	});
 

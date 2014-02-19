@@ -24,21 +24,26 @@
  */
 
 {
-	var rx, tx;
+	var hostname;
+	var chimconf;
+	var tx;
 	var success, fail;
-	var handleQueryResponse, handleStandardResponse, callbacks;
+	var handleQueryResponse;
 	var win, tree, view, dict, bound, line, gray, grays, dark, darks;
-	var modeR, modeW, modeX;
 
-	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
+	hostname = "hostname".unixCmdGetStdOutLines[0]++".local";
+
 	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
 
-	rx = NetAddr ("chimaera.local", 4444);
 	tx = NetAddr ("chimaera.local", 4444);
+
+	chimconf = ChimaeraConf(s, tx, tx);
 	
-	win = Window.new("Chimaera Configuration Wizard", Rect(0, 0, 1024, 640), false).front;
+	win = Window.new("Chimaera Configuration Wizard", Rect(0, 0, 1024, 640), true).front;
+	win.onClose = {0.exit};
 	tree = TreeView.new(win, Rect(0, 0, 1024, 640));
-	tree.columns = ["description", "type", "value", "unit", "path", "read", "write", "call"];
+	tree.resize = 5;
+	tree.columns = ["Description", "Value", "Attribute", "OSC Path", "Get", "Set", "Call"];
 	gray = Color.gray(0.9);
 	grays = [gray, gray, gray, gray, gray];
 	dark = Color.gray(0.7);
@@ -47,213 +52,162 @@
 	bound = Rect(0, 0, 400, 20);
 	line = 0;
 	dict = Dictionary.new();
-	callbacks = Dictionary.new();
 
-	modeR = 1;
-	modeW = 2;
-	modeX = 4;
-
-	handleQueryResponse = {|msg, time, addr, port|
-		var uuid = msg[1];
-		var dest = msg[2].asString;
-		var json = msg[3].asString.parseYAML;
+	handleQueryResponse = {|msg|
+		var json = msg[0].asString.parseYAML;
 		
 		var path = json["path"];
 		var description = json["description"];
 		var type = json["type"];
-		
-		if(path == "/") {
-			view = tree.addItem([description, type, nil, nil, path, nil]);
-		} {
-			view = dict[path];
-			view = view.addChild([description, type, nil, nil, path, nil]);
-		};
-		
-		if(type == "node") {
-			var items = json["items"];
-			view.colors = darks;
-			
-			items do: {|itm|
-				var child = path++itm;
-				dict[child] = view;
-				tx.sendMsg(child++"!", 1000.rand);
-			}
-		} {
-			var arguments = json["arguments"];
-			var layout = VLayout();
-			var stack = view.setView(2, View.new()).view(2).layout_(layout);
-			var get;
-			var set;
-			var arr = Order.new();
-			var hasR = 0;
-			var hasW = 0;
-			var hasX = 0;
-			
-			if(line%2 == 1) { view.colors = grays; };
-			line = line+1;
-			
-			arguments do: {|argv, i|
-				var type = argv["type"];
-				var mode = argv["mode"].asInt;
-				var description = argv["description"];
-				var itm;
 
-				if(mode & modeR != 0) {hasR = hasR + 1};
-				if(mode & modeW != 0) {hasW = hasW + 1};
-				if(mode & modeX != 0) {hasX = hasX + 1};
+		msg[0].asString.postln;
+	
+		AppClock.sched(0, {
+			if(path == "/") {
+				view = tree.addItem([description, nil, nil, path]);
+			} {
+				view = dict[path];
+				view = view.addChild([description, nil, nil, path]);
+			};
+			
+			if(type == "node") {
+				var items = json["items"];
+				view.colors = darks;
+				
+				items do: {|itm|
+					var child = path++itm;
+					dict[child] = view;
+					chimconf.sendMsg(child++"!", handleQueryResponse);
+				}
+			} {
+				var arguments = json["arguments"];
+				var layout = VLayout();
+				var stack = view.setView(1, View.new()).view(1).layout_(layout);
+				var get;
+				var set;
+				var arr = Order.new();
+				var hasR = 0;
+				var hasW = 0;
+				var hasX = 0;
+				
+				if(line%2 == 1) { view.colors = grays; };
+				line = line+1;
+				
+				arguments do: {|argv, i|
+					var type = argv["type"];
+					var read = false;
+					var write = false;
+					var optional = false;
+					var description = argv["description"];
+					var itm;
 
-				switch(type,
-					"i", {
-						var range = argv["range"];
-						range[0] = range[0].asInt;
-						range[1] = range[1].asInt;
-						if( (range[0] == 0) && (range[1] == 1) ) {
-							itm = CheckBox.new();
-							itm.enabled = mode != modeR;
-							itm.value = range[0];
-						} {
+					if(argv["read"] == "true") {read=true};
+					if(argv["write"] == "true") {write=true};
+					if(argv["optional"] == "true") {optional=true};
+
+					if(read) {hasR = hasR + 1};
+					if(write) {hasW = hasW + 1};
+					if(optional.not) {hasX = hasX + 1};
+
+					switch(type,
+						"i", {
+							var range = argv["range"];
+							range[0] = range[0].asInt;
+							range[1] = range[1].asInt;
+							if( (range[0] == 0) && (range[1] == 1) ) {
+								itm = CheckBox.new();
+								itm.enabled = write;
+								itm.value = range[0];
+							} {
+								itm = NumberBox.new();
+								itm.enabled = write;
+								itm.value = range[0];
+								itm.decimals = 0;
+								itm.clipLo = range[0];
+								itm.clipHi = range[1];
+							};
+						},
+						"f", {
+							var range = argv["range"];
+							range[0] = range[0].asFloat;
+							range[1] = range[1].asFloat;
 							itm = NumberBox.new();
-							itm.enabled = mode != modeR;
+							itm.enabled = write;
 							itm.value = range[0];
-							itm.decimals = 0;
+							itm.decimals = 6;
 							itm.clipLo = range[0];
 							itm.clipHi = range[1];
-						};
-					},
-					"f", {
-						var range = argv["range"];
-						range[0] = range[0].asFloat;
-						range[1] = range[1].asFloat;
-						itm = NumberBox.new();
-						itm.enabled = mode != modeR;
-						itm.value = range[0];
-						itm.decimals = 6;
-						itm.clipLo = range[0];
-						itm.clipHi = range[1];
-					},
-					"s", {
-						itm = TextField.new();
-						itm.enabled = mode != modeR;
-					}
-				);
-				layout.add(itm);
-				arr[i] = itm;
-				view.setString(3, description);
-			};
+						},
+						"s", {
+							var maxlen = argv["maxlen"].asInt;
+							itm = TextField.new();
+							itm.enabled = write;
+						}
+					);
+					layout.add(itm);
+					arr[i] = itm;
+					view.setString(2, description);
+				};
 
-			if(hasR > 0) {
-				get = view.setView(5, Button.new()).view(5);
-				
-				get.states = [["get"]];
+				if(hasR > 0) {
+					get = view.setView(4, Button.new()).view(4);
+					get.states = [["get"]];
+					get.action = {
+						var vals = Array.new(hasX);
 
-				get.action = {
-					var vals = Array.new(hasX);
-
-					arr do: {|itm, i|
-						if(arguments[i]["mode"].asInt & modeX != 0) {
-							switch(arguments[i]["type"], 
-								"i", {vals.add(itm.value.asInt)},
-								"f", {vals.add(itm.value.asFloat)},
-								"s", {vals.add(itm.value.asString)}
-							);
-						};
-					};
-
-					tx.sendMsg(path, 1000.rand, *vals);
-					
-					callbacks[path] = {|msg, time, addr, port|
-						var uuid = msg[1].asInt;
-						var dest = msg[2].asString;
-						
-						["get callback", msg, time, addr, port].postln;
 						arr do: {|itm, i|
-							switch(arguments[i]["type"], 
-								"i", {itm.value = msg[3+i].asInt},
-								"f", {itm.value = msg[3+i].asFloat},
-								"s", {itm.value = msg[3+i].asString}
-							);
+							if( (arguments[i]["write"] == "true") && (arguments[i]["optional"] == "false") ) {
+								switch(arguments[i]["type"], 
+									"i", {vals.add(itm.value.asInt)},
+									"f", {vals.add(itm.value.asFloat)},
+									"s", {vals.add(itm.value.asString)}
+								);
+							};
 						};
+
+						chimconf.sendMsg(path, vals, {|msg|
+							AppClock.sched(0, {
+								arr do: {|itm, i|
+									switch(arguments[i]["type"], 
+										"i", {itm.value = msg[0+i].asInt},
+										"f", {itm.value = msg[0+i].asFloat},
+										"s", {itm.value = msg[0+i].asString}
+									);
+								};
+							});
+						});
 					};
+					get.action.value;
 				};
-			};
 
-			if(hasW > 0) {
-				set = view.setView(6, Button.new()).view(6);
-				
-				set.states = [["set"]];
+				if( (hasW > 0) && (hasW != hasX) ) {
+					set = view.setView(5, Button.new()).view(5);
+					set.states = [["set"]];
+					set.action = {
+						var vals = Array.new(hasW);
 
-				set.action = {
-					var vals = Array.new(hasW);
-
-					arr do: {|itm, i|
-						if(arguments[i]["mode"].asInt & modeW != 0) {
-							switch(arguments[i]["type"], 
-								"i", {vals.add(itm.value.asInt)},
-								"f", {vals.add(itm.value.asFloat)},
-								"s", {vals.add(itm.value.asString)}
-							);
+						arr do: {|itm, i|
+							if(arguments[i]["write"] == "true") {
+								switch(arguments[i]["type"], 
+									"i", {vals.add(itm.value.asInt)},
+									"f", {vals.add(itm.value.asFloat)},
+									"s", {vals.add(itm.value.asString)}
+								);
+							};
 						};
-					};
 
-					tx.sendMsg(path, 1000.rand, *vals);
-
-					callbacks[path] = {|msg, time, addr, port|
-						var uuid = msg[1].asInt;
-						var dest = msg[2].asString;
-						
-						["set callback", msg, time, addr, port].postln;
-						//TODO
-					};
-				};
-			};
-
-			if( (hasR == 0) && (hasW == 0) ) {
-				set = view.setView(7, Button.new()).view(7);
-				
-				set.states = [["call"]];
-
-				set.action = {
-					tx.sendMsg(path, 1000.rand);
-
-					callbacks[path] = {|msg, time, addr, port|
-						var uuid = msg[1].asInt;
-						var dest = msg[2].asString;
-						
-						["call callback", msg, time, addr, port].postln;
-						//TODO
+						chimconf.sendMsg(path, vals);
 					};
 				};
 
-			};
-		};
-	};
-
-	handleStandardResponse = {|msg, time, addr, port|
-		var uuid = msg[1].asInt;
-		var dest = msg[2].asString;
-
-		callbacks[dest].value(msg, time, addr, port);
-	};
-
-	success = OSCFunc({|msg, time, addr, port|
-		var uuid = msg[1].asInt;
-		var dest = msg[2].asString;
-
-		AppClock.sched(0, {
-			if(msg[2].asString.endsWith("!")) {
-				handleQueryResponse.value(msg, time, addr, port);
-			} {
-				handleStandardResponse.value(msg, time, addr, port);
+				if( (hasR == 0) && (hasW == hasX) ) {
+					set = view.setView(6, Button.new()).view(6);
+					set.states = [["call"]];
+					set.action = { chimconf.sendMsg(path); };
+				};
 			};
 		});
-	}, "/success", rx);
+	};
 
-	fail = OSCFunc({|msg, time, addr, port|
-		var uuid = msg[1].asInt;
-		var dest = msg[2].asString;
-		var err = msg[3].asString;
-		["fail", uuid, dest, err].postln;
-	}, "/fail", rx);
-
-	tx.sendMsg("/!", 1000.rand);
+	chimconf.sendMsg("/!", handleQueryResponse);
 }.value;

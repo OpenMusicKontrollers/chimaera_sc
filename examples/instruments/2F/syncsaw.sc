@@ -29,7 +29,7 @@
  */
 
 {|synthname, n|
-	var bot = 3*12 - 0.5 - (n/3 % 12 / 2);
+	var bot = 2*12 - 0.5 - (n/3 % 12 / 2);
 	var top = n/3 + bot + 1;
 
 	SynthDef(synthname, {|freq=0, amp=0, p=0, gate=1, out=0|
@@ -39,7 +39,7 @@
 		env = Linen.kr(gate, up, 1.0, down);
 
 		freq = LinExp.kr(freq, 0, 1, bot.midicps, top.midicps);
-		freq2 = LinLin.kr(amp, 0, 1, (1*12).midicps, (7*12).midicps);
+		freq2 = LinLin.kr(amp, 0, 1, (0*12).midicps, (4*12).midicps);
 
 		sig = SyncSaw.ar(freq, freq2, mul:env);
 		sig = RLPF.ar(sig, freq2*4, 0.1);

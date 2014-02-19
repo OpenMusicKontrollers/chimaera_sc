@@ -48,7 +48,7 @@ ChimaeraConf {
 			msg.removeAt(0); // path
 			id = msg.removeAt(0);
 			dest = msg.removeAt(0);
-			this.success(id, msg);
+			this.success(id, dest, msg);
 		}, "/success", rx);
 
 		fail = OSCFunc({|msg, time, addr, port|
@@ -58,7 +58,7 @@ ChimaeraConf {
 			msg.removeAt(0); // path
 			id = msg.removeAt(0);
 			dest = msg.removeAt(0);
-			this.fail(id, msg);
+			this.fail(id, dest, msg);
 		}, "/fail", rx);
 	}
 
@@ -66,18 +66,18 @@ ChimaeraConf {
 		this.initConn(iTx, iRx);
 	}
 
-	success {|id, msg|
+	success {|id, dest, msg|
 		if (cb[id].isFunction) {
 			cb.[id].value(msg);
 		};
 		cb.removeAt(id);
-		("Chimaera request #"++id+"succeeded:").postln;
+		("Chimaera request #"++id+"succeeded:"+dest).postln;
 	}
 
-	fail {|id, msg|
+	fail {|id, dest, msg|
 		if (cb[id].notNil) {
 			cb.removeAt(id);
-			("Chimaera request #"++id+"failed:" + msg[0]).postln;
+			("Chimaera request #"++id+"failed:"+dest+"("++msg[0]++")").postln;
 		};
 	}
 
@@ -85,13 +85,20 @@ ChimaeraConf {
 		var path, callback, res;
 
 		path = args.removeAt(0);
-		if (args[args.size-1].isFunction) {
+		if(args[args.size-1].isFunction) {
 			callback = args.pop;
 		} {
 			callback = true;
 		};
 		cb[count] = callback;
-		tx.performList(\sendMsg, path, count, args);
+		if( (args[args.size-1].isArray) && (args[args.size-1].isString.not) ) {
+			var arr = args.pop;
+			args = args ++ arr;
+		arr.postln;
+			tx.performList(\sendMsg, path, count, args);
+		} {
+			tx.performList(\sendMsg, path, count, args);
+		};
 
 		// send timeout to ourselfs
 		AppClock.sched(1, {

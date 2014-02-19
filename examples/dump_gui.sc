@@ -24,7 +24,9 @@
  */
 
 {
-	var rx, tx, chimconf, chimdump;
+	var hostname, rx, tx, chimconf, chimdump;
+
+	hostname = "hostname".unixCmdGetStdOutLines[0]++".local";
 
 	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
 	tx = NetAddr("chimaera.local", 4444);
@@ -35,7 +37,7 @@
 	chimconf = ChimaeraConf(s, tx, tx);
 
 	chimconf.sendMsg("/engines/enabled", true); // enable output
-	chimconf.sendMsg("/engines/address", "192.168.1.10:3333"); // send output stream to port 3333
+	chimconf.sendMsg("/engines/address", hostname++":"++3333); // send output stream to port 3333
 	chimconf.sendMsg("/engines/offset", 0.001); // add 1ms offset to bundle timestamps
 	chimconf.sendMsg("/engines/reset"); // reset all output engines
 
