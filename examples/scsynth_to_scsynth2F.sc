@@ -23,7 +23,7 @@
  *     distribution.
  */
 
-Server.supernova;
+//Server.supernova;
 s.options.blockSize = 0x10;
 s.options.memSize = 0x10000;
 s.latency = nil;
@@ -37,7 +37,6 @@ s.doWhenBooted({
 	gidOffset = 100;
 	sidOffset = 200;
 
-	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
 	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
 
 	tx = NetAddr ("chimaera.local", 4444);

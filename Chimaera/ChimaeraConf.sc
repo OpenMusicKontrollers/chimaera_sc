@@ -94,7 +94,6 @@ ChimaeraConf {
 		if( (args[args.size-1].isArray) && (args[args.size-1].isString.not) ) {
 			var arr = args.pop;
 			args = args ++ arr;
-		arr.postln;
 			tx.performList(\sendMsg, path, count, args);
 		} {
 			tx.performList(\sendMsg, path, count, args);

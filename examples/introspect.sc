@@ -60,7 +60,7 @@
 		var description = json["description"];
 		var type = json["type"];
 
-		msg[0].asString.postln;
+		//msg[0].asString.postln;
 	
 		AppClock.sched(0, {
 			if(path == "/") {
