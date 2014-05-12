@@ -29,7 +29,7 @@
  */
 
 {|synthname, n|
-	var bot = 3*12 - 0.5 - (n % 18 / 6);
+	var bot = 2*12 - 0.5 - (n % 18 / 6);
 	var top = n/3 + bot;
 
 	SynthDef(synthname, {|freq=0, amp=0, p=0, gate=1, out=0|

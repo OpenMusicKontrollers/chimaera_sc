@@ -1,4 +1,4 @@
-#!/usr/bin/sclang
+#!/usr/bin/env sclang
 
 /*
  * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
@@ -23,7 +23,7 @@
  *     distribution.
  */
 
-Server.supernova;
+//Server.supernova;
 s.options.blockSize = 0x10;
 s.options.memSize = 0x10000;
 s.latency = nil;
@@ -48,7 +48,7 @@ s.doWhenBooted({
 	rate = 3000;
 	chimconf.sendMsg("/engines/reset");
 	chimconf.sendMsg("/engines/address", hostname++":"++s.addr.port); // send output stream to port 3333
-	chimconf.sendMsg("/engines/offset", 1/rate+0.001);
+	chimconf.sendMsg("/engines/offset", 0.002);
 
 	chimconf.sendMsg("/sensors/rate", rate);
 	chimconf.sendMsg("/sensors/group/reset"); // reset groups
