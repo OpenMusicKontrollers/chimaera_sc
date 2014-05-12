@@ -1,4 +1,4 @@
-#!/usr/bin/sclang
+#!/usr/bin/env sclang
 
 /*
  * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)

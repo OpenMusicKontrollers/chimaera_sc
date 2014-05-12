@@ -1,5 +1,3 @@
-#!/usr/bin/env sclang
-
 /*
  * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
@@ -23,13 +21,32 @@
  *     distribution.
  */
 
-{
-	var tx, chimconf, chimgroup;
+{|synthname, n|
+	var bot = 2*12 - 0.5 - (n % 18 / 6);
+	var top = n/3 + bot;
 
-	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
-	tx = NetAddr("chimaera.local", 4444);
+	SynthDef(synthname, {|freq=0, amp=0, p=0, gate=1, out=0|
+		var suicide, up=0.1, down=2.0, env, sig, sig1, sig2, cutoff, x;
 
-	chimconf = ChimaeraConf(s, tx, tx);
+		suicide = DetectSilence.kr(Line.kr(0.1, 0.0, 1.0)+gate, 0.0001, down, doneAction:2);
+		env = Linen.kr(gate, up, 1.0, down);
 
-	chimgroup = ChimaeraGroup(s, chimconf);
-}.value;
+		x = freq;
+		freq = LinExp.kr(freq, 0, 1, bot.midicps, top.midicps);
+
+		sig1 = Pulse.ar(freq, 0.5, mul:amp*env);
+		sig1 = Blip.ar(freq, 5) * sig1;
+		sig1 = RLPF.ar(sig1, LinExp.kr(amp, 0, 1, 10, 2000), 0.2);
+
+		sig2 = SinOsc.ar(freq, mul:amp*env);
+		sig2 = sig2 * VarSaw.ar(freq*1.005, 0.2, mul:5);
+		sig2 = sig2.distort;
+		sig2 = BPF.ar(sig2, 500, 0.1, mul:5);
+		sig2 = sig2*(1-(x*0.5));
+
+		sig = SelectX.ar(amp, [sig2, sig1]);
+
+		sig = FreeVerb.ar(sig, mix:0.3, room:0.8, damp:0.1);
+		OffsetOut.ar(out, sig);
+	}).add;
+}
