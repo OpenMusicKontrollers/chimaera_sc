@@ -81,8 +81,10 @@
 				}
 			} {
 				var arguments = json["arguments"];
-				var layout = VLayout();
-				var stack = view.setView(1, View.new()).view(1).layout_(layout);
+				var fields = VLayout();
+				var labels = VLayout();
+				var fieldsStack = view.setView(1, View.new()).view(1).layout_(fields);
+				var labelsStack = view.setView(2, View.new()).view(2).layout_(labels);
 				var get;
 				var set;
 				var arr = Order.new();
@@ -144,9 +146,10 @@
 							itm.enabled = write;
 						}
 					);
-					layout.add(itm);
+					fields.add(itm);
 					arr[i] = itm;
-					view.setString(2, description);
+					labels.add(StaticText.new().string_(description));
+					//view.setString(2, description);
 				};
 
 				if(hasR > 0) {
