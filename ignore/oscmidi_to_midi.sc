@@ -43,8 +43,8 @@
 
 	chimconf.sendMsg("/sensors/rate", rate);
 	chimconf.sendMsg("/sensors/group/reset"); // reset groups
-	chimconf.sendMsg("/sensors/group/attributes", 0, ChimaeraConf.north, 0.0, 1.0, false); // add group
-	chimconf.sendMsg("/sensors/group/attributes", 1, ChimaeraConf.south, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/sensors/group/attributes/0", 0.0, 1.0, false, true, false); // add group
+	chimconf.sendMsg("/sensors/group/attributes/1", 0.0, 1.0, true, false, false); // add group
 
 	effect = 0x07; // volume
 	chimconf.sendMsg("/engines/oscmidi/enabled", true); // enable OSCMidi output engine

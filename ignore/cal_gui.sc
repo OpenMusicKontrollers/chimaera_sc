@@ -38,7 +38,7 @@
 
 	chimconf.sendMsg("/engines/enabled", true); // enable output
 	chimconf.sendMsg("/engines/address", hostname++":"++3333); // send output stream to port 3333
-	chimconf.sendMsg("/engines/offset", 0.001); // add 1ms offset to bundle timestamps
+	chimconf.sendMsg("/engines/offset", 0.002); // add 2ms offset to bundle timestamps
 	chimconf.sendMsg("/engines/reset"); // reset all output engines
 
 	chimdump = ChimaeraDump(s, chimconf, rx);

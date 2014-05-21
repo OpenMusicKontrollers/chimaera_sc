@@ -50,12 +50,12 @@ s.doWhenBooted({
 
 	chimconf.sendMsg("/sensors/rate", rate);
 	chimconf.sendMsg("/sensors/group/reset"); // reset groups
-	chimconf.sendMsg("/sensors/group/attributes", 0, ChimaeraConf.north, 0.0, 1.0, false); // add group
-	chimconf.sendMsg("/sensors/group/attributes", 1, ChimaeraConf.south, 0.0, 1.0, false); // add group
+	chimconf.sendMsg("/sensors/group/attributes/0", 0.0, 1.0, false, true, false); // add group
+	chimconf.sendMsg("/sensors/group/attributes/1", 0.0, 1.0, true, false, false); // add group
 
 	chimconf.sendMsg("/engines/scsynth/enabled", true); // enable scsynth output engine
-	chimconf.sendMsg("/engines/scsynth/attributes", 0, \base, sidOffset, 0+gidOffset, 0, 0, true, true, \addToHead.asInt, false);
-	chimconf.sendMsg("/engines/scsynth/attributes", 1, \lead, sidOffset, 1+gidOffset, 1, 0, true, true, \addToHead.asInt, false);
+	chimconf.sendMsg("/engines/scsynth/attributes/0", \base, sidOffset, 0+gidOffset, 0, 0, true, true, \addToHead.asInt, false);
+	chimconf.sendMsg("/engines/scsynth/attributes/1", \lead, sidOffset, 1+gidOffset, 1, 0, true, true, \addToHead.asInt, false);
 
 	s.sendMsg('/g_new', 0+gidOffset, \addToHead.asInt, 0);
 	s.sendMsg('/g_new', 1+gidOffset, \addToHead.asInt, 0);

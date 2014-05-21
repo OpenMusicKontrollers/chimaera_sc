@@ -77,7 +77,9 @@
 				items do: {|itm|
 					var child = path++itm;
 					dict[child] = view;
-					chimconf.sendMsg(child++"!", handleQueryResponse);
+					AppClock.sched(0.1, {
+						chimconf.sendMsg(child++"!", handleQueryResponse);
+					});
 				}
 			} {
 				var arguments = json["arguments"];
@@ -90,7 +92,6 @@
 				var arr = Order.new();
 				var hasR = 0;
 				var hasW = 0;
-				var hasX = 0;
 				
 				if(line%2 == 1) { view.colors = grays; };
 				line = line+1;
@@ -99,51 +100,71 @@
 					var type = argv["type"];
 					var read = false;
 					var write = false;
-					var optional = false;
 					var description = argv["description"];
 					var itm;
 
 					if(argv["read"] == "true") {read=true};
 					if(argv["write"] == "true") {write=true};
-					if(argv["optional"] == "true") {optional=true};
 
 					if(read) {hasR = hasR + 1};
 					if(write) {hasW = hasW + 1};
-					if(optional.not) {hasX = hasX + 1};
 
 					switch(type,
 						"i", {
 							var range = argv["range"];
-							range[0] = range[0].asInt;
-							range[1] = range[1].asInt;
-							if( (range[0] == 0) && (range[1] == 1) ) {
-								itm = CheckBox.new();
-								itm.enabled = write;
-								itm.value = range[0];
-							} {
+							var values = argv["values"];
+							if(range.notNil, {
+								range[0] = range[0].asInt;
+								range[1] = range[1].asInt;
+								range[2] = range[2].asInt;
+								if( (range[0] == 0) && (range[1] == 1) ) {
+									itm = CheckBox.new();
+									itm.enabled = write;
+									itm.value = range[0];
+								} {
+									itm = NumberBox.new();
+									itm.enabled = write;
+									itm.value = range[0];
+									itm.decimals = 0;
+									itm.clipLo = range[0];
+									itm.clipHi = range[1];
+								};
+							}, if(values.notNil, {
 								itm = NumberBox.new();
 								itm.enabled = write;
-								itm.value = range[0];
-								itm.decimals = 0;
-								itm.clipLo = range[0];
-								itm.clipHi = range[1];
-							};
+							}))
 						},
 						"f", {
 							var range = argv["range"];
-							range[0] = range[0].asFloat;
-							range[1] = range[1].asFloat;
-							itm = NumberBox.new();
-							itm.enabled = write;
-							itm.value = range[0];
-							itm.decimals = 6;
-							itm.clipLo = range[0];
-							itm.clipHi = range[1];
+							var values = argv["values"];
+							if(range.notNil, {
+								range[0] = range[0].asFloat;
+								range[1] = range[1].asFloat;
+								range[2] = range[2].asFloat;
+								itm = NumberBox.new();
+								itm.enabled = write;
+								itm.value = range[0];
+								itm.decimals = 6;
+								itm.clipLo = range[0];
+								itm.clipHi = range[1];
+							}, if(values.notNil, {
+								itm = NumberBox.new();
+								itm.enabled = write;
+							}))
 						},
 						"s", {
-							var maxlen = argv["maxlen"].asInt;
-							itm = TextField.new();
-							itm.enabled = write;
+							var range = argv["range"];
+							var values = argv["values"];
+							if(range.notNil, {
+								range[0] = range[0].asInt;
+								range[1] = range[1].asInt;
+								range[2] = range[2].asInt;
+								itm = TextField.new();
+								itm.enabled = write;
+							}, if(values.notNil, {
+								itm = TextField.new();
+								itm.enabled = write;
+							}))
 						}
 					);
 					fields.add(itm);
@@ -156,19 +177,7 @@
 					get = view.setView(4, Button.new()).view(4);
 					get.states = [["get"]];
 					get.action = {
-						var vals = Array.new(hasX);
-
-						arr do: {|itm, i|
-							if( (arguments[i]["write"] == "true") && (arguments[i]["optional"] == "false") ) {
-								switch(arguments[i]["type"], 
-									"i", {vals.add(itm.value.asInt)},
-									"f", {vals.add(itm.value.asFloat)},
-									"s", {vals.add(itm.value.asString)}
-								);
-							};
-						};
-
-						chimconf.sendMsg(path, vals, {|msg|
+						chimconf.sendMsg(path, {|msg|
 							AppClock.sched(0, {
 								arr do: {|itm, i|
 									switch(arguments[i]["type"], 
@@ -183,7 +192,7 @@
 					get.action.value;
 				};
 
-				if( (hasW > 0) && (hasW != hasX) ) {
+				if(hasW > 0) {
 					set = view.setView(5, Button.new()).view(5);
 					set.states = [["set"]];
 					set.action = {
@@ -203,7 +212,7 @@
 					};
 				};
 
-				if( (hasR == 0) && (hasW == hasX) ) {
+				if( (hasR == 0) && (hasW == 0) ) {
 					set = view.setView(6, Button.new()).view(6);
 					set.states = [["call"]];
 					set.action = { chimconf.sendMsg(path); };

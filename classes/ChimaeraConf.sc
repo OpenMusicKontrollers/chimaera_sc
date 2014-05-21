@@ -22,7 +22,6 @@
  */
 
 ChimaeraConf {
-	classvar <south, <north, <both;
 	var tx, rx, count, success, fail, cb;
 
 	*new {|s, iTx, iRx|
@@ -30,9 +29,6 @@ ChimaeraConf {
 	}
 
 	*initClass {
-		south = 0x80;
-		north = 0x100;
-		both = 0x180;
 	}
 
 	initConn {|iTx, iRx|

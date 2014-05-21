@@ -32,35 +32,31 @@ ChimaeraGroup {
 		//TODO
 	}
 
-	get {|i|
-		config.sendMsg("/sensor/group/attributes", i, {|msg|
-			var gid = msg[0];
-			var pid = msg[1];
-			var x0 = msg[2];
-			var x1 = msg[3];
-			var no = pid & 0x100 == 0x100;
-			var so = pid & 0x80 == 0x80;
+	get {|gid|
+		config.sendMsg("/sensors/group/attributes/"++gid, {|msg|
+			var x0 = msg[0];
+			var x1 = msg[1];
+			var no = msg[2].asBoolean;
+			var so = msg[3].asBoolean;
 			var s = msg[4].asBoolean;
 
 			Routine.run({
-				range[i].lo = x0;
-				range[i].hi = x1;
-				north[i].value = no;
-				south[i].value = so;
-				scale[i].value = s;
+				range[gid].lo = x0;
+				range[gid].hi = x1;
+				north[gid].value = no;
+				south[gid].value = so;
+				scale[gid].value = s;
 			}, clock:AppClock);
 		});
 	}
 
-	set {|i|
-		var gid = i;
-		var pid = 0;
-		var x0 = range[i].lo;
-		var x1 = range[i].hi;
-		var s = scale[i].value;
-		if(north[i].value) {pid = pid | 0x100};
-		if(south[i].value) {pid = pid | 0x080};
-		config.sendMsg("/sensor/group/attributes", gid, pid, x0, x1, s);
+	set {|gid|
+		var x0 = range[gid].lo;
+		var x1 = range[gid].hi;
+		var no = north[gid].value;
+		var so = south[gid].value;
+		var s = scale[gid].value;
+		config.sendMsg("/sensors/group/attributes/"++gid, x0, x1, no, so, s);
 	}
 
 	init {|s, conf, rx|

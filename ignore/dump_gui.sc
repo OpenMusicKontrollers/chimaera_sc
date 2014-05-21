@@ -39,11 +39,11 @@
 	rate = 2500;
 	chimconf.sendMsg("/engines/reset"); // reset all output engines
 	chimconf.sendMsg("/engines/address", hostname++":"++3333); // send output stream to port 3333
-	chimconf.sendMsg("/engines/offset", 1/rate+0.001);
+	chimconf.sendMsg("/engines/offset", 0.002);
 
 	chimconf.sendMsg("/sensors/rate", rate);
 
-	//chimconf.sendMsg("/calibration/reset"); // uncomment to reset quiescent output
+	chimconf.sendMsg("/calibration/reset"); // uncomment to reset quiescent output
 
 	chimdump = ChimaeraDump(s, chimconf, rx);
 }.value;
