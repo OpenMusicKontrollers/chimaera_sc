@@ -98,10 +98,10 @@ ChimaeraGroup {
 
 				layout.add(HLayout().add(
 					Button().states_([["load"]]).action_({
-						config.sendMsg("/sensor/group/load");
+						config.sendMsg("/config/load");
 						n.do {|i| this.get(i)};
 					})).add(
-					Button().states_([["save"]]).action_({config.sendMsg("/sensor/group/save")})));
+					Button().states_([["save"]]).action_({config.sendMsg("/config/save")})));
 			}, clock:AppClock);
 		});
 	}
