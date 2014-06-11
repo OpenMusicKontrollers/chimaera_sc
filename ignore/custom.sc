@@ -28,10 +28,10 @@
 
 	hostname = "hostname".unixCmdGetStdOutLines[0]++".local";
 
-	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
+	//thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
 	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
 
-	rx = NetAddr ("chimaera.local", 3333);
+	//rx = NetAddr ("chimaera.local", 3333);
 	tx = NetAddr ("chimaera.local", 4444);
 
 	chimconf = ChimaeraConf(s, tx, tx);
@@ -42,10 +42,20 @@
 	chimconf.sendMsg("/engines/offset", 0.002);
 	
 	chimconf.sendMsg("/engines/custom/reset");
-	chimconf.sendMsg("/engines/custom/frame", "/frm", "i($f)");
-	chimconf.sendMsg("/engines/custom/on", "/gate", "i($b 8 % $g 8 * +) i(1)");
-	chimconf.sendMsg("/engines/custom/off", "/gate", "i($b 8 % $g 8 * +) i(0)");
-	chimconf.sendMsg("/engines/custom/set", "/cv", "i($b 8 % $g 8 * +) f($x 2 * 1 -) f($z 0.5 * 0.5 +)");
+	chimconf.sendMsg("/engines/custom/append", "frame", "/frm", "i($f)");
+	chimconf.sendMsg("/engines/custom/append", "idle",  "/idl", "i($f)");
+	//chimconf.sendMsg("/engines/custom/append", "end",   "/end", "");
+
+	chimconf.sendMsg("/engines/custom/append", "on",  "/gate", "i($g 8* $b 8%+) i(1)");
+	chimconf.sendMsg("/engines/custom/append", "off", "/gate", "i($g 8* $b 8%+) i(0)");
+	chimconf.sendMsg("/engines/custom/append", "set", "/cv1",  "i($g 8* $b 8%+) f($x 2* 1-)");
+	chimconf.sendMsg("/engines/custom/append", "set", "/cv2",  "i($g 8* $b 8%+) f($z 0.5* 0.5+)");
+
+	//chimconf.sendMsg("/engines/custom/append", "on",  "/midi", "m($g 8* $b 8%+ 0x90 $b 0x7f& 0x7f)");
+	//chimconf.sendMsg("/engines/custom/append", "off", "/midi", "m($g 8* $b 8%+ 0x80 $b 0x7f& 0x7f)");
+	//chimconf.sendMsg("/engines/custom/append", "set", "/midi", "m($g 8* $b 8%+ 0xc0 0x27 $z 0x3fff* 0x7f&)");
+	//chimconf.sendMsg("/engines/custom/append", "set", "/midi", "m($g 8* $b 8%+ 0xc0 0x07 $z 0x3fff* 7<<)");
+
 	chimconf.sendMsg("/engines/custom/enabled", true);
 
 	chimconf.sendMsg("/sensors/rate", rate);
