@@ -39,10 +39,10 @@
 		env = Linen.kr(gate, up, 1.0, down);
 
 		freq = LinExp.kr(freq, 0, 1, bot.midicps, top.midicps);
-		freq2 = LinLin.kr(amp, 0, 1, (0*12).midicps, (4*12).midicps);
+		freq2 = LinLin.kr(amp, 0, 1, (0*12).midicps, (5*12).midicps);
 
 		sig = SyncSaw.ar(freq, freq2, mul:env);
-		sig = RLPF.ar(sig, freq2*4, 0.1);
+		sig = RLPF.ar(sig, freq2*8, 0.1);
 		sig = FreeVerb.ar(sig);
 		OffsetOut.ar(out, sig);
 	}).add;
