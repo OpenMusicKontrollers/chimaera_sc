@@ -29,18 +29,19 @@
  */
 
 {|synthname, n|
-	var bot = 3*12 - 0.5 - (n % 18 / 6);
-	var top = n/3 + bot;
-
 	SynthDef(synthname, {|freq=0, amp=0, p=0, gate=0, out=0|
 		var suicide, up=0.1, down=1.0, env, sig, vol, cut;
 
 		suicide = DetectSilence.kr(Line.kr(0.1, 0.0, 1.0)+gate, 0.0001, down, doneAction:2);
 		env = Linen.kr(gate, up, 1.0, down);
 
-		freq = freq * n / 3 + bot;
-		freq = freq - freq.round * (2**(2/3)) ** 3 + freq.round;
-		freq = freq.midicps;
+		//freq = ChimaeraMapLinearCPS.kr(freq, n:n, oct:2);
+		//freq = ChimaeraMapStepCPS.kr(freq, n:n, oct:2);
+		//freq = ChimaeraMapPolyStepCPS.kr(freq, n:n, oct:2, order:3);
+		//freq = ChimaeraMap2ndOrderStepCPS.kr(freq, n:n, oct:2);
+		freq = ChimaeraMap3rdOrderStepCPS.kr(freq, n:n, oct:2);
+		//freq = ChimaeraMap4thOrderStepCPS.kr(freq, n:n, oct:2);
+		//freq = ChimaeraMap5thOrderStepCPS.kr(freq, n:n, oct:2);
 
 		vol = LinExp.kr(amp, 0.0, 1.0, 0.5, 1.0);
 		sig = Pluck.ar(WhiteNoise.ar(0.1), gate, 1, freq.reciprocal, 10, 0.20);
