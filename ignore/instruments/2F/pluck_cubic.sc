@@ -35,13 +35,13 @@
 		suicide = DetectSilence.kr(Line.kr(0.1, 0.0, 1.0)+gate, 0.0001, down, doneAction:2);
 		env = Linen.kr(gate, up, 1.0, down);
 
-		//freq = ChimaeraMapLinearCPS.kr(freq, n:n, oct:2);
-		//freq = ChimaeraMapStepCPS.kr(freq, n:n, oct:2);
-		//freq = ChimaeraMapPolyStepCPS.kr(freq, n:n, oct:2, order:3);
-		//freq = ChimaeraMap2ndOrderStepCPS.kr(freq, n:n, oct:2);
-		freq = ChimaeraMap3rdOrderStepCPS.kr(freq, n:n, oct:2);
-		//freq = ChimaeraMap4thOrderStepCPS.kr(freq, n:n, oct:2);
-		//freq = ChimaeraMap5thOrderStepCPS.kr(freq, n:n, oct:2);
+		//freq = ChimaeraMapLinearCPS.kr(freq, n:n, oct:3);
+		//freq = ChimaeraMapStepCPS.kr(freq, n:n, oct:3);
+		//freq = ChimaeraMapPolyStepCPS.kr(freq, n:n, oct:3, order:3);
+		//freq = ChimaeraMap2ndOrderStepCPS.kr(freq, n:n, oct:3);
+		freq = ChimaeraMap3rdOrderStepCPS.kr(freq, n:n, oct:3);
+		//freq = ChimaeraMap4thOrderStepCPS.kr(freq, n:n, oct:3);
+		//freq = ChimaeraMap5thOrderStepCPS.kr(freq, n:n, oct:3);
 
 		vol = LinExp.kr(amp, 0.0, 1.0, 0.5, 1.0);
 		sig = Pluck.ar(WhiteNoise.ar(0.1), gate, 1, freq.reciprocal, 10, 0.20);
