@@ -39,5 +39,5 @@ s.doWhenBooted({
 	s.sendMsg('/g_new', 1+gidOffset, \addToHead.asInt, 0);
 	s.sync;
 
-	"./instruments2F.sc".load.value(96);
+	"./instruments2F.sc".load.value(128);
 })
