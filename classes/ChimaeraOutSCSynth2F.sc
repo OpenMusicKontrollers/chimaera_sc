@@ -47,7 +47,8 @@ ChimaeraOutSCSynth2F : ChimaeraOut {
 		if(lag < 0) {
 			("message late"+(lag*1000)+"ms").postln;
 		};
-		s.listSendBundle(lag, bndl);
+		//s.listSendBundle(lag, bndl);
+		s.listSendBundle(nil, bndl); //FIXME
 	}
 
 	on { |time, sid, gid, pid, x, z| // set callback function for blob on-events

@@ -23,7 +23,12 @@
  *     distribution.
  */
 
-{
+s.options.blockSize = 0x10;
+s.options.memSize = 0x10000;
+s.latency = nil;
+s.boot;
+
+s.doWhenBooted({
 	var rx, tx, rate, chimconf, chimin, chimout;
 
 	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
@@ -47,11 +52,11 @@
 	chimconf.sendMsg("/sensors/group/reset"); // reset groups
 	chimconf.sendMsg("/sensors/group/attributes/0", 0.0, 1.0, false, true, false); // add group
 	chimconf.sendMsg("/sensors/group/attributes/1", 0.0, 1.0, true, false, false); // add group
+
 	chimconf.sendMsg("/sensors/number", {|msg|
 		var n = msg[0];
-		chimout = ChimaeraOutMidi(s, n, [\base, \lead]);
-		chimout.effect = 0x07;
-		chimout.doublePrecision = true;
+		chimout = ChimaeraOutSCSynth2F(s, n, [\base, \lead]);
 		chimin = ChimaeraInDummy(s, chimconf, rx, chimout);
+		Routine.run({"./instruments2F.sc".load.value(n);}, clock:AppClock);
 	});
-}.value;
+})

@@ -67,11 +67,11 @@ ChimaeraInDummy : ChimaeraIn {
 			ignore = true;
 		} { //time >= lastTime 
 			ignore = false;
-			if(time > lastTime) {
+			//if(time > lastTime) { FIXME
 				engine.end(lastTime);
 				engine.start(time);
 				lastTime = time;
-			}
+			//}
 		};
 	}
 }
