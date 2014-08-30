@@ -1,7 +1,7 @@
 #!/usr/bin/env sclang
 
 /*
- * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2014 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -47,6 +47,7 @@
 	chimconf.sendMsg("/sensors/group/reset"); // reset groups
 	chimconf.sendMsg("/sensors/group/attributes/0", 0.0, 1.0, false, true, false); // add group
 	chimconf.sendMsg("/sensors/group/attributes/1", 0.0, 1.0, true, false, false); // add group
+
 	chimconf.sendMsg("/sensors/number", {|msg|
 		var n = msg[0];
 		chimout = ChimaeraOutMidi(s, n, [\base, \lead]);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2014 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -50,14 +50,12 @@ ChimaeraInTuio2 : ChimaeraIn {
 
 			ignore = false;
 			if(timestamp < lastTime) {
-				["message late", timestamp, lastTime].postln;
+				("message late"+((timestamp-lastTime)*1000)+"ms").postln;
 				ignore = true;
 			};
 	
 			lastFid = fid;
 			lastTime = timestamp;
-
-			engine.start(time);
 		}, "/tuio2/frm", rx);
 
 		tok = OSCFunc({ |msg, time, addr, port|
@@ -104,8 +102,6 @@ ChimaeraInTuio2 : ChimaeraIn {
 						engine.set(b[0], b[1], b[2], b[3], b[4], b[5]);
 					};
 				};
-
-				engine.end(time);
 
 				blobsOld = msg;
 			};

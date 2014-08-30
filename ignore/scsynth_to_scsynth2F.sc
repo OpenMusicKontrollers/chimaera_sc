@@ -1,7 +1,7 @@
 #!/usr/bin/env sclang
 
 /*
- * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2014 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,11 +23,16 @@
  *     distribution.
  */
 
-//Server.supernova;
+s.options.protocol = \tcp;
 s.options.blockSize = 0x10;
 s.options.memSize = 0x10000;
 s.latency = nil;
 s.boot;
+
+Routine.run({
+	2.wait;
+	s.addr.connect; // connect via TCP
+}, clock:AppClock);
 
 s.doWhenBooted({
 	var hostname, tx, chimconf, rate, sidOffset, gidOffset;
@@ -44,9 +49,14 @@ s.doWhenBooted({
 	chimconf = ChimaeraConf(s, tx, tx);
 
 	rate = 3000;
+	chimconf.sendMsg("/engines/enabled", false);
 	chimconf.sendMsg("/engines/reset");
-	chimconf.sendMsg("/engines/address", hostname++":"++s.addr.port); // send output stream to port 3333
 	chimconf.sendMsg("/engines/offset", 0.002);
+	chimconf.sendMsg("/engines/address", hostname++":"++s.addr.port, {
+		chimconf.sendMsg("/engines/server", false);
+		chimconf.sendMsg("/engines/mode", "osc.tcp");
+		chimconf.sendMsg("/engines/enabled", true);
+	});
 
 	chimconf.sendMsg("/sensors/rate", rate);
 	chimconf.sendMsg("/sensors/group/reset"); // reset groups

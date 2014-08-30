@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2014 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -37,43 +37,42 @@ ChimaeraOutSCSynth4F : ChimaeraOut {
 		s.sendMsg('/g_new', grp, \addToHead.asInt, 0);
 	}
 
-	start { |time|
-		bndl.clear;
-	}
-
-	end { |time|
-		var lag;
-		lag = time - SystemClock.beats;	
-		if(lag < 0) {
-			("message late"+(lag*1000)+"ms").postln;
-		};
-		s.listSendBundle(lag, bndl);
-	}
-
 	on { |time, sid, gid, pid, x, z| // set callback function for blob on-events
+		var lag = time - SystemClock.beats;	
+		if(lag < 0) { ("message late"+(lag*1000)+"ms").postln; };
+
 		if(gid==0) {
 			s.sendMsg('/s_new', instruments[gid], sid+sidOffset, \addToHead, grp, 'out', gid, 'gate', 0);
-			bndl = bndl.add(['/n_set', sid+sidOffset, 0, x, 1, z, 2, pid, 'gate', 1]);
+			s.sendBundle(lag, ['/n_set', sid+sidOffset, 0, x, 1, z, 2, pid, 'gate', 1]);
 		} {
-			bndl = bndl.add(['/n_set', grp, 3, x, 4, z, 5, pid]);
+			s.sendBundle(lag, ['/n_set', grp, 3, x, 4, z, 5, pid]);
 		};
 	}
 
 	off { |time, sid, gid, pid| // set callback function for blob off-events
+		var lag = time - SystemClock.beats;	
+		if(lag < 0) { ("message late"+(lag*1000)+"ms").postln; };
+
 		if(gid==0) {
-			bndl = bndl.add(['/n_set', sid+sidOffset, 'gate', 0]);
+			s.sendBundle(lag, ['/n_set', sid+sidOffset, 'gate', 0]);
 		};
 	}
 
 	set { |time, sid, gid, pid, x, z| // set callback function for blob set-events
+		var lag = time - SystemClock.beats;	
+		if(lag < 0) { ("message late"+(lag*1000)+"ms").postln; };
+
 		if(gid==0) {
-			bndl = bndl.add(['/n_set', sid+sidOffset, 0, x, 1, z, 2, pid]);
+			s.sendBundle(lag, ['/n_set', sid+sidOffset, 0, x, 1, z, 2, pid]);
 		} {
-			bndl = bndl.add(['/n_set', grp, 3, x, 4, z, 5, pid]);
+			s.sendBundle(lag, ['/n_set', grp, 3, x, 4, z, 5, pid]);
 		};
 	}
 
 	idle { |time|
-		bndl = bndl.add(['/n_set', 0+gidOffset, 'gate', 0]);
+		var lag = time - SystemClock.beats;	
+		if(lag < 0) { ("message late"+(lag*1000)+"ms").postln; };
+
+		s.sendBundle(lag, ['/n_set', 0+gidOffset, 'gate', 0]);
 	}
 }
