@@ -65,6 +65,10 @@ ChimaeraDump {
 					Pen.stroke;
 					Pen.line(p2, p3);
 					Pen.stroke;
+					for(1,n-1, {|i|
+						Pen.line(Point.new(i*16+0.5*w, 0), Point.new(i*16+0.5*w, 2*h));
+						Pen.stroke;
+					});
 
 					for(0,n-1, {|i|
 						var msb, lsb, val;
