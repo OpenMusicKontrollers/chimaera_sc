@@ -1,7 +1,7 @@
 #!/usr/bin/env sclang
 
 /*
- * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2014 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -28,10 +28,7 @@
 
 	hostname = "hostname".unixCmdGetStdOutLines[0]++".local";
 
-	//thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
 	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
-
-	//rx = NetAddr ("chimaera.local", 3333);
 	tx = NetAddr ("chimaera.local", 4444);
 
 	chimconf = ChimaeraConf(s, tx, tx);

@@ -1,7 +1,7 @@
 #!/usr/bin/env sclang
 
 /*
- * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2014 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,9 +24,7 @@
  */
 
 {
-	var hostname, rx, tx, rate, chimconf, midio, func, effect;
-
-	hostname = "hostname".unixCmdGetStdOutLines[0]++".local";
+	var rx, tx, rate, chimconf, midio, func, effect;
 
 	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
 	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
@@ -38,8 +36,12 @@
 
 	rate = 3000;
 	chimconf.sendMsg("/engines/reset"); // reset all output engines
-	chimconf.sendMsg("/engines/address", hostname++":"++3333); // send output stream to port 3333
 	chimconf.sendMsg("/engines/offset", 0.002);
+	
+	chimconf.sendMsg("/engines/enabled", false);
+	chimconf.sendMsg("/engines/server", true);
+	chimconf.sendMsg("/engines/mode", "osc.tcp");
+	chimconf.sendMsg("/engines/enabled", true, {|msg| rx.connect;}); // connect via TCP
 
 	chimconf.sendMsg("/sensors/rate", rate);
 	chimconf.sendMsg("/sensors/group/reset"); // reset groups

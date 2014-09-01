@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2014 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,56 +22,27 @@
  */
 
 ChimaeraInDummy : ChimaeraIn {
-	var on, off, set, idle, lastTime, ignore;
+	var on, off, set, idle, lastTime;
 
 	init {|s, conf, rx, iEngine|
 		engine = iEngine;
 
-		lastTime = 0;
-		ignore = false;
-
 		conf.sendMsg("/engines/dummy/enabled", true); // enable dummy output engine
 
 		on = OSCFunc({ |msg, time, addr, port|
-			this.update(time);
-			if(ignore.not) {
-				engine.on(time, msg[1], msg[2], msg[3], msg[4], msg[5])
-			};
+			engine.on(time, msg[1], msg[2], msg[3], msg[4], msg[5])
 		}, "/on", rx);
 
 		off = OSCFunc({ |msg, time, addr, port|
-			this.update(time);
-			if(ignore.not) {
-				engine.off(time, msg[1], msg[2], msg[3])
-			};
+			engine.off(time, msg[1], msg[2], msg[3])
 		}, "/off", rx);
 
 		set = OSCFunc({ |msg, time, addr, port|
-			this.update(time);
-			if(ignore.not) {
-				engine.set(time, msg[1], msg[2], msg[3], msg[4], msg[5])
-			};
+			engine.set(time, msg[1], msg[2], msg[3], msg[4], msg[5])
 		}, "/set", rx);
 
 		idle = OSCFunc({ |msg, time, addr, port|
-			this.update(time);
-			if(ignore.not) {
-				engine.idle(time);
-			};
+			engine.idle(time);
 		}, "/idle", rx);
-	}
-
-	update {|time|
-		if(time < lastTime) {
-			"ignoring out-of-order event".postln;
-			ignore = true;
-		} { //time >= lastTime 
-			ignore = false;
-			//if(time > lastTime) { FIXME
-				engine.end(lastTime);
-				engine.start(time);
-				lastTime = time;
-			//}
-		};
 	}
 }

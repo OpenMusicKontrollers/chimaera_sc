@@ -1,7 +1,7 @@
 #!/usr/bin/env sclang
 
 /*
- * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2014 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -43,8 +43,12 @@ s.doWhenBooted({
 
 	rate = 3000;
 	chimconf.sendMsg("/engines/reset");
-	chimconf.sendMsg("/engines/address", hostname++":"++3333); // send output stream to port 3333
 	chimconf.sendMsg("/engines/offset", 0.002);
+	chimconf.sendMsg("/engines/address", hostname++":"++3333, {
+		chimconf.sendMsg("/engines/server", false);
+		chimconf.sendMsg("/engines/mode", "osc.udp");
+		chimconf.sendMsg("/engines/enabled", true);
+	});
 
 	chimconf.sendMsg("/sensors/rate", rate);
 	chimconf.sendMsg("/sensors/group/reset"); // reset groups
