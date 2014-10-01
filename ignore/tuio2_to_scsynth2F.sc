@@ -59,6 +59,6 @@ s.doWhenBooted({
 		var n = msg[0];
 		chimout = ChimaeraOutSCSynth2F(s, n, [\base, \lead]);
 		chimin = ChimaeraInTuio2(s, chimconf, rx, chimout);
-		Routine.run({"./instruments2F.sc".load.value(n);}, clock:AppClock);
+		Routine.run({"./instruments2F.sc".load.value(n, \base, \lead);}, clock:AppClock);
 	});
 })

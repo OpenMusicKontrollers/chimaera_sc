@@ -1,4 +1,4 @@
-#!/usr/bin/env sclang
+#!/usr/bin/env optsclang
 
 /*
  * Copyright (c) 2014 Hanspeter Portner (dev@open-music-kontrollers.ch)
@@ -29,14 +29,13 @@ s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var hostname, tx, chimconf, rate, sidOffset, gidOffset;
+	var gidOffset;
 	
 	gidOffset = 100;
-	sidOffset = 200;
 
 	s.sendMsg('/g_new', 0+gidOffset, \addToHead.asInt, 0);
 	s.sendMsg('/g_new', 1+gidOffset, \addToHead.asInt, 0);
 	s.sync;
 
-	"./instruments2F.sc".load.value(128);
+	"./instruments2F.sc".load.value(96, \base, \lead);
 })

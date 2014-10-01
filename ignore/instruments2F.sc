@@ -21,7 +21,7 @@
  *     distribution.
  */
 
-{|n|
+{|n, baseSym, leadSym|
 	var baseInst, leadInst, loadInst, win, adrop, bdrop, path;
 
 	/*
@@ -47,17 +47,17 @@
 	loadInst.value(\base, baseInst[0]);
 	loadInst.value(\lead, leadInst[0]);
 
-	win = Window.new("2F Instruments", Rect(200,200,400,100)).front;
+	win = Window.new("2F Instruments ("++n++")", Rect(200,200,400,100)).front;
 
 	adrop = PopUpMenu(win, Rect(10,10,180,20));
 	adrop.items = baseInst;
 	adrop.action = {|menu|
-		loadInst.value(\base, menu.item);
+		loadInst.value(baseSym, menu.item);
 	};
 
 	bdrop = PopUpMenu(win, Rect(200,10,180,20));
 	bdrop.items = leadInst;
 	bdrop.action = {|menu|
-		loadInst.value(\lead, menu.item);
+		loadInst.value(leadSym, menu.item);
 	};
 }
