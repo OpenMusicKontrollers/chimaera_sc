@@ -47,7 +47,7 @@ s.doWhenBooted({
 	s.sendMsg('/g_new', 8+gidOffset, \addToHead.asInt, 0); // mix
 	s.sync;
 
-	SynthDef(\mixer, {|g0=0, g1=0, g2=0, g3=0, g4=0, g5=0, g6=0, g7=0|
+	SynthDef(\mixer, {|g0=0.5, g1=0.5, g2=0.5, g3=0.5, g4=0.5, g5=0.5, g6=0.5, g7=0.5|
 		var a0, a1, a2, a3, a4, a5, a6, a7;
 		var p0, p1, p2, p3, p4, p5, p6, p7;
 
@@ -80,8 +80,8 @@ s.doWhenBooted({
 
 	// /n_set iif 108 0 0.5
 
-	"./instruments2F.sc".load.value(96, \base1, \lead1); // mini
-	//"./instruments2F.sc".load.value(128, \base2, \lead2); // midi
-	"./instruments2F.sc".load.value(128, \base3, \lead3); // medi
+	//"./instruments2F.sc".load.value(96, \base1, \lead1); // mini
+	"./instruments2F.sc".load.value(128, \base2, \lead2); // midi
+	//"./instruments2F.sc".load.value(128, \base3, \lead3); // medi
 	"./instruments2F.sc".load.value(160, \base4, \lead4); // maxi
 })
