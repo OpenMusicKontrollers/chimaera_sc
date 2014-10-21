@@ -36,7 +36,7 @@
 
 	rate = 3000;
 	chimconf.sendMsg("/engines/reset");
-	chimconf.sendMsg("/engines/offset", 0.002);
+	chimconf.sendMsg("/engines/offset", 0.0025);
 	
 	chimconf.sendMsg("/engines/enabled", false);
 	chimconf.sendMsg("/engines/server", true);
@@ -51,7 +51,7 @@
 	chimconf.sendMsg("/sensors/number", {|msg|
 		var n = msg[0];
 		chimout = ChimaeraOutMidi(s, n, [\base, \lead]);
-		chimout.effect = 0x07;
+		chimout.control = 0x07;
 		chimout.doublePrecision = true;
 		chimin = ChimaeraInDummy(s, chimconf, rx, chimout);
 	});

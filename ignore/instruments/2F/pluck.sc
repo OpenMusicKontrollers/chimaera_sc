@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2014 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,31 +21,21 @@
  *     distribution.
  */
 
-/*
- * plucked instrument
- *
- * x := frequency
- * z := volume, distortion, cutoff frequency of low-pass filter
- */
-
 {|synthname, n|
-	var bot = 3*12 - 0.5 - (n % 18 / 6);
-	var top = n/3 + bot;
+	SynthDef(synthname, {|x=0, y=0, p=0, gate=0, out=0|
+		var env, freq, vol, cut, sig;
 
-	SynthDef(synthname, {|freq=0, amp=0, p=0, gate=0, out=0|
-		var suicide, up=0.1, down=1.0, env, sig, vol, cut;
+		env = Linen.kr(gate, 0.01, 1.0, 1.0, doneAction:2);
 
-		suicide = DetectSilence.kr(Line.kr(0.1, 0.0, 1.0)+gate, 0.0001, down, doneAction:2);
-		env = Linen.kr(gate, up, 1.0, down);
+		freq = ChimaeraMapLinearCPS.kr(x, n:n, oct:3);
+		vol = LinExp.kr(y, 0.0, 1.0, 0.5, 1.0);
+		cut = LinExp.kr(y, 0.0, 1.0, 500, 1000);
 
-		freq = LinExp.kr(freq, 0, 1, bot.midicps, top.midicps);
-
-		vol = LinExp.kr(amp, 0.0, 1.0, 0.5, 1.0);
 		sig = Pluck.ar(WhiteNoise.ar(0.1), gate, 1, freq.reciprocal, 10, 0.20);
-		sig = (sig*amp*1000).distort;
+		sig = (sig*y*1000).distort;
 		sig = FreeVerb.ar(sig, mix:0.8, room:0.5, damp:0.1, mul:vol*env);
-		cut = LinExp.kr(amp, 0.0, 1.0, 500, 1000);
 		sig = RLPF.ar(sig, freq:cut, rq:0.3);
+
 		OffsetOut.ar(out, sig);
 	}).add;
 }

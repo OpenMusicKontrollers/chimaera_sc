@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2014 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,31 +21,18 @@
  *     distribution.
  */
 
-/*
- * plucked instrument with 4 degrees of freedom
- *
- * - pitch
- * - volume
- * - decaytime
- * - coef
- */
-
 {|synthname, n|
-	var bot = 3*12 - 0.5 - (n % 18 / 6);
-	var top = n/3 + bot;
+	SynthDef(synthname, {|x1=0, y1=0, p1=0, x2=0, y2=0, p2=0, gate=0, out=0|
+		var env, freq1, freq2, sig;
 
-	SynthDef(synthname, {|freq=0, amp=0, p=0, freq1=0, amp1=0, p1=0, gate=0, out=0|
-		var suicide, up=0.1, down=5.0, env, sig;
+		env = Linen.kr(gate, 0.01, 1.0, 1.0, doneAction:2);
 
-		suicide = DetectSilence.kr(Line.kr(0.1, 0.0, 1.0)+gate, 0.0001, down, doneAction:2);
-		env = Linen.kr(gate, up, 1.0, down);
+		freq1 = ChimaeraMapLinearCPS.kr(x1, n:n, oct:2);
+		x2 = 1 - x2 * 0.5;
+		freq2 = LinExp.kr(y2, 0, 1, (1*12).midicps, (11*12).midicps);
 
-		freq = LinExp.kr(freq, 0, 1, bot.midicps, top.midicps);
-		freq1 = 1 - freq1 * 0.5;
-		amp1 = LinExp.kr(amp1, 0, 1, (1*12-0.5).midicps, (11*12+0.5).midicps);
-
-		sig = Pluck.ar(WhiteNoise.ar(0.1), gate, 1, freq.reciprocal, 10, freq1, mul:env*amp);
-		sig = RLPF.ar(sig, amp1, 0.1);
+		sig = Pluck.ar(WhiteNoise.ar(0.1), gate, 1, freq1.reciprocal, 10, x2, mul:env*y1);
+		sig = RLPF.ar(sig, freq2, 0.1);
 
 		OffsetOut.ar(out, sig);
 	}).add;

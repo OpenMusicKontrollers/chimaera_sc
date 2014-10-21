@@ -41,7 +41,7 @@ s.doWhenBooted({
 
 	rate = 3000;
 	chimconf.sendMsg("/engines/reset");
-	chimconf.sendMsg("/engines/offset", 0.002);
+	chimconf.sendMsg("/engines/offset", 0.0025);
 	
 	chimconf.sendMsg("/engines/enabled", false);
 	chimconf.sendMsg("/engines/server", true);

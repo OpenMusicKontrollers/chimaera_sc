@@ -22,7 +22,7 @@
  */
 
 ChimaeraInTuio2 : ChimaeraIn {
-	var firstFrame, frm, tok, alv, blobs, blobsOld, lastFid, lastTime, missing, ignore;
+	var firstFrame, frm, tok, alv, blobs, blobsOld, lastFid, lastTime, ignore;
 
 	init {|s, conf, rx, iEngine|
 		engine = iEngine;
@@ -32,7 +32,6 @@ ChimaeraInTuio2 : ChimaeraIn {
 		blobsOld = Array.new;
 		lastFid = 0;
 		lastTime = 0;
-		missing = 0;
 		ignore = false;
 
 		conf.sendMsg("/engines/tuio2/enabled", true); // enable Tuio2 output engine
@@ -43,16 +42,12 @@ ChimaeraInTuio2 : ChimaeraIn {
 			fid = msg[1];
 			timestamp = time; //msg[2]; // TODO sclang does not support the OSC timestamp as argument
 
-			if(fid != (lastFid+1) ) {
-				missing = missing + 1;
-				["message missing", lastFid, fid, missing].postln;
-			};
-
-			ignore = false;
-			if(timestamp < lastTime) {
-				("message late"+((timestamp-lastTime)*1000)+"ms").postln;
+			if( (fid < lastFid) || (timestamp < lastTime), {
+				["TUIO2 packet missing or late"].postln;
 				ignore = true;
-			};
+			}, {
+				ignore = false;
+			});
 	
 			lastFid = fid;
 			lastTime = timestamp;
@@ -61,7 +56,7 @@ ChimaeraInTuio2 : ChimaeraIn {
 		tok = OSCFunc({ |msg, time, addr, port|
 			var o, sid, pid, gid, x, z;
 
-			if(ignore == false) {
+			if(ignore == false, {
 				sid = msg[1];
 				pid = msg[2] & 0xffff;
 				gid = msg[3];
@@ -70,41 +65,41 @@ ChimaeraInTuio2 : ChimaeraIn {
 				//a = msg[6]; // not used
 
 				blobs[sid] = [time, sid, gid, pid, x, z];
-			};
+			});
 		}, "/tuio2/tok", rx);
 
 		alv = OSCFunc({ |msg, time, addr, port|
 			var n, tmp;
 
-			if(ignore == false) {
+			if(ignore == false, {
 				msg.removeAt(0); // remove /tuio2/alv
 
 				n = msg.size;
-				if(n==0) {
+				if(n==0, {
 					engine.idle(time);
-				};
+				});
 
 				// search for disappeard blobs
 				blobsOld do: {|v|
-					if(msg.indexOf(v).isNil) {
+					if(msg.indexOf(v).isNil, {
 						var b = blobs[v];
-						engine.off(b[0], b[1], b[2], b[3]);
+						engine.off(b[0], b[1]); // time, sid
 						blobs.removeAt(v);
-					}
+					});
 				};
 
 				// search for new blobs
 				msg do: {|v|
 					var b = blobs[v];
-					if(blobsOld.indexOf(v).isNil) {
-						engine.on(b[0], b[1], b[2], b[3], b[4], b[5]);
-					} {
-						engine.set(b[0], b[1], b[2], b[3], b[4], b[5]);
-					};
+					if(blobsOld.indexOf(v).isNil, {
+						engine.on(b[0], b[1], b[2], b[3], b[4], b[5]); // time, sid, gid, pid, x, z
+					}, {
+						engine.set(b[0], b[1], b[4], b[5]); // time, sid, x, z
+					});
 				};
 
 				blobsOld = msg;
-			};
+			});
 		}, "/tuio2/alv", rx);
 	}
 }

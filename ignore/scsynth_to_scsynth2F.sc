@@ -36,7 +36,7 @@ Routine.run({
 
 s.doWhenBooted({
 	var hostname, tx, chimconf, rate, sidOffset, gidOffset;
-	
+
 	hostname = "hostname".unixCmdGetStdOutLines[0]++".local";
 
 	gidOffset = 100;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2014 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,22 +22,17 @@
  */
 
 {|synthname, n|
-	var bot = 3*12 - 0.5 - (n % 18 / 6);
-	var top = n/3 + bot;
+	SynthDef(synthname, {|x1=0, y1=0, p1=0, x2=0, y2=0, p2=0, gate=0, out=0|
+		var env, freq1, sig;
 
-	SynthDef(synthname, {|freq=0, amp=0, p=0, freq1=0, amp1=0, p1=0, gate=0, out=0|
-		var up=0.1, down=0.5, env, suicide, sig, x, y;
+		env = Linen.kr(gate, 0.01, 1.0, 1.0, doneAction:2);
 
-		suicide = DetectSilence.kr(Line.kr(0.1, 0.0, 1.0)+gate, 0.0001, down, doneAction:2);
-		env = Linen.kr(gate, up, 1.0, down);
+		freq1 = ChimaeraMapLinearCPS.kr(x1, n:n, oct:2);
+		y2 = y2 - OnePole.kr(y2, 0.998); // differentiate
+		y2 = RunningSum.kr(y2.abs.tan, 20)*0.05;
 
-		freq = LinExp.kr(freq, 0, 1, bot.midicps, top.midicps);
-
-		freq1 = freq1 - OnePole.kr(freq1, 0.998); // differentiate
-		freq1 = RunningSum.kr(freq1.abs.tan, 20)*0.05;
-
-		sig = Mix.ar(Saw.ar([freq, freq/3, freq*5], mul:freq1*env));
-		sig = RLPF.ar(sig, amp*900+100, 0.1);
+		sig = Mix.ar(Saw.ar([freq1, freq1/3, freq1*5], mul:y2*env));
+		sig = RLPF.ar(sig, y1*900+100, 0.1);
 
 		OffsetOut.ar(out, sig);
 	}).add;

@@ -38,11 +38,11 @@ ChimaeraOut {
 		"on".postln;
 	}
 
-	off { |time, sid, gid, pid|
+	off { |time, sid|
 		"off".postln;
 	}
 
-	set { |time, sid, gid, pid, x, z|
+	set { |time, sid, x, z|
 		"set".postln;
 	}
 

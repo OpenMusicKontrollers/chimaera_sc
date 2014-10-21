@@ -22,11 +22,10 @@
  */
 
 ChimaeraOutSCSynth4F : ChimaeraOut {
-	var bndl, sidOffset, gidOffset, instruments, s, grp;
+	var sidOffset, gidOffset, instruments, s, grp, lookup;
 
 	init {|iS, n, groups|
 		instruments = groups;
-		bndl = List.new(32);
 		s = iS;
 
 		gidOffset = 100;
@@ -35,11 +34,15 @@ ChimaeraOutSCSynth4F : ChimaeraOut {
 		grp = 0+gidOffset;
 
 		s.sendMsg('/g_new', grp, \addToHead.asInt, 0);
+		
+		lookup = Order.new; // lookup table of currently active blobs
 	}
 
 	on { |time, sid, gid, pid, x, z| // set callback function for blob on-events
-		var lag = time - SystemClock.beats;	
+		var lag = time - SystemClock.seconds;	
 		if(lag < 0) { ("message late"+(lag*1000)+"ms").postln; };
+
+		lookup[sid] = gid;
 
 		if(gid==0) {
 			s.sendMsg('/s_new', instruments[gid], sid+sidOffset, \addToHead, grp, 'out', gid, 'gate', 0);
@@ -49,28 +52,36 @@ ChimaeraOutSCSynth4F : ChimaeraOut {
 		};
 	}
 
-	off { |time, sid, gid, pid| // set callback function for blob off-events
-		var lag = time - SystemClock.beats;	
+	off { |time, sid| // set callback function for blob off-events
+		var gid;
+		var lag = time - SystemClock.seconds;	
 		if(lag < 0) { ("message late"+(lag*1000)+"ms").postln; };
+		
+		gid = lookup[sid];
 
 		if(gid==0) {
 			s.sendBundle(lag, ['/n_set', sid+sidOffset, 'gate', 0]);
 		};
+
+		lookup[sid] = nil;
 	}
 
-	set { |time, sid, gid, pid, x, z| // set callback function for blob set-events
-		var lag = time - SystemClock.beats;	
+	set { |time, sid, x, z| // set callback function for blob set-events
+		var gid;
+		var lag = time - SystemClock.seconds;	
 		if(lag < 0) { ("message late"+(lag*1000)+"ms").postln; };
+		
+		gid = lookup[sid];
 
 		if(gid==0) {
-			s.sendBundle(lag, ['/n_set', sid+sidOffset, 0, x, 1, z, 2, pid]);
+			s.sendBundle(lag, ['/n_set', sid+sidOffset, 0, x, 1, z]);
 		} {
-			s.sendBundle(lag, ['/n_set', grp, 3, x, 4, z, 5, pid]);
+			s.sendBundle(lag, ['/n_set', grp, 3, x, 4, z]);
 		};
 	}
 
 	idle { |time|
-		var lag = time - SystemClock.beats;	
+		var lag = time - SystemClock.seconds;	
 		if(lag < 0) { ("message late"+(lag*1000)+"ms").postln; };
 
 		s.sendBundle(lag, ['/n_set', 0+gidOffset, 'gate', 0]);

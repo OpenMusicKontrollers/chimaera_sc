@@ -22,7 +22,7 @@
  */
 
 ChimaeraOutMidi : ChimaeraOut {
-	var midio, <>effect, <>doublePrecision, bot, ran, lookup;
+	var midio, <>control, <>doublePrecision, bot, ran, lookup;
 
 	init {|s, n, groups|
 		MIDIClient.init;
@@ -30,65 +30,73 @@ ChimaeraOutMidi : ChimaeraOut {
 		midio = MIDIOut(0); // use this on Linux, as patching is usually done via ALSA/JACK
 		midio.latency = 0; // send MIDI with no delay, instantaneously
 
-		effect = 0x07; // volume
+		control = 0x07; // volume
 		doublePrecision = true;
 
-		bot = 3*12 - 0.5 - (n % 18 / 6);
+		bot = 2*12 - 0.5 - (n % 18 / 6);
 		ran = n/3;
 
 		lookup = Order.new; // lookup table of currently active keys
 	}
 
 	on { |time, sid, gid, pid, x, z| // set callback function for blob on-events
-		var midikey, cc;
+		var midikey, midinote, cc;
 
-		midio.latency = time - SystemClock.beats;
+		midio.latency = time - SystemClock.seconds;
 		if(midio.latency < 0) { ("message late"+(midio.latency*1000)+"ms").postln; };
 
 		midikey = x*ran+bot;
+		midinote = midikey.round;
 
-		lookup[sid] = midikey.round;
-		midio.noteOn(gid, lookup[sid], 0x7f); // we're using the group id (gid) as MIDI channel number
-		midio.bend(gid, midikey-lookup[sid]/ran*0x2000+0x1fff); // we're using a pitchbend span of ran*100 cents
+		lookup[sid] = [gid, midinote];
+		midio.noteOn(gid, midinote, 0x7f); // we're using the group id (gid) as MIDI channel number
+		midio.bend(gid, midikey-midinote/ran*0x2000+0x1fff); // we're using a pitchbend span of ran*100 cents
 		if(doublePrecision) {
 			cc = (z*0x3fff).asInteger;
-			midio.control(gid, effect | 0x20, cc & 0x7f); // effect LSB
-			midio.control(gid, effect, cc >> 7); // effect MSB
+			midio.control(gid, control | 0x20, cc & 0x7f); // control LSB
+			midio.control(gid, control, cc >> 7); // control MSB
 		} { // !doublePrecision
 			cc = (z*0x7f).asInteger;
-			midio.control(gid, effect, cc); // effect MSB
+			midio.control(gid, control, cc); // control MSB
 		}
 	}
 
-	off { |time, sid, gid, pid| // set callback function for blob off-events
-		midio.latency = time - SystemClock.beats;
+	off { |time, sid| // set callback function for blob off-events
+		var midinote, gid;
+
+		midio.latency = time - SystemClock.seconds;
 		if(midio.latency < 0) { ("message late"+(midio.latency*1000)+"ms").postln; };
 
-		midio.noteOff(gid, lookup[sid], 0x00);
+		gid = lookup[sid][0];
+		midinote =  lookup[sid][1];
+
+		midio.noteOff(gid, midinote, 0x00);
 		lookup[sid] = nil;
 	}
 
-	set { |time, sid, gid, pid, x, z| // set callback function for blob set-events
-		var midikey, cc;
+	set { |time, sid, x, z| // set callback function for blob set-events
+		var midikey, midinote, gid, cc;
 
-		midio.latency = time - SystemClock.beats;
+		midio.latency = time - SystemClock.seconds;
 		if(midio.latency < 0) { ("message late"+(midio.latency*1000)+"ms").postln; };
 
 		midikey = x*ran+bot;
+		gid = lookup[sid][0];
+		midinote = lookup[sid][1];
 
-		midio.bend(gid, midikey-lookup[sid]/ran*0x2000+0x1fff); // we're using a pitchbend span of ran*100 cents
+		midio.bend(gid, midikey-midinote/ran*0x2000+0x1fff); // we're using a pitchbend span of ran*100 cents
 		if(doublePrecision) {
 			cc = (z*0x3fff).asInteger;
-			midio.control(gid, effect | 0x20, cc & 0x7f); // effect LSB
-			midio.control(gid, effect, cc >> 7); // effect MSB
+			midio.control(gid, control | 0x20, cc & 0x7f); // control LSB
+			midio.control(gid, control, cc >> 7); // control MSB
 		} { // !doublePrecision
 			cc = (z*0x7f).asInteger;
-			midio.control(gid, effect, cc); // effect MSB
+			midio.control(gid, control, cc); // control MSB
 		}
 	}
 
 	idle { |time|
-		midio.latency = time - SystemClock.beats;
+		midio.latency = time - SystemClock.seconds;
 		if(midio.latency < 0) { ("message late"+(midio.latency*1000)+"ms").postln; };
 	}
 }

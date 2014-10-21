@@ -28,17 +28,18 @@ ChimaeraInDummy : ChimaeraIn {
 		engine = iEngine;
 
 		conf.sendMsg("/engines/dummy/enabled", true); // enable dummy output engine
+		conf.sendMsg("/engines/dummy/redundancy", false); // disable redundant output
 
 		on = OSCFunc({ |msg, time, addr, port|
-			engine.on(time, msg[1], msg[2], msg[3], msg[4], msg[5])
+			engine.on(time, msg[1], msg[2], msg[3], msg[4], msg[5]) // sid, gid, pid, x, z
 		}, "/on", rx);
 
 		off = OSCFunc({ |msg, time, addr, port|
-			engine.off(time, msg[1], msg[2], msg[3])
+			engine.off(time, msg[1]) // sid
 		}, "/off", rx);
 
 		set = OSCFunc({ |msg, time, addr, port|
-			engine.set(time, msg[1], msg[2], msg[3], msg[4], msg[5])
+			engine.set(time, msg[1], msg[2], msg[3]) // sid, x, z
 		}, "/set", rx);
 
 		idle = OSCFunc({ |msg, time, addr, port|

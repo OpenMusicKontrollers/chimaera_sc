@@ -29,13 +29,14 @@ s.latency = nil;
 s.boot;
 
 s.doWhenBooted({
-	var gidOffset;
+	var gidOffset, N;
 	
 	gidOffset = 100;
+	N = 160;
 
 	s.sendMsg('/g_new', 0+gidOffset, \addToHead.asInt, 0);
 	s.sendMsg('/g_new', 1+gidOffset, \addToHead.asInt, 0);
 	s.sync;
 
-	"./instruments2F.sc".load.value(96, \base, \lead);
+	"./instruments2F.sc".load.value(N, \base, \lead);
 })

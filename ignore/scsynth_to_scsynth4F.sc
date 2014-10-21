@@ -43,7 +43,6 @@ s.doWhenBooted({
 	sidOffset = 200;
 	grp = 0+gidOffset;
 
-	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
 	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
 
 	tx = NetAddr ("chimaera.local", 4444);
@@ -53,7 +52,7 @@ s.doWhenBooted({
 	rate = 3000;
 	chimconf.sendMsg("/engines/enabled", false);
 	chimconf.sendMsg("/engines/reset");
-	chimconf.sendMsg("/engines/offset", 0.002);
+	chimconf.sendMsg("/engines/offset", 0.0025);
 	chimconf.sendMsg("/engines/address", hostname++":"++s.addr.port, {
 		chimconf.sendMsg("/engines/server", false);
 		chimconf.sendMsg("/engines/mode", "osc.tcp");

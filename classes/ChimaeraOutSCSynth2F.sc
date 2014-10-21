@@ -37,29 +37,29 @@ ChimaeraOutSCSynth2F : ChimaeraOut {
 	}
 
 	on { |time, sid, gid, pid, x, z| // set callback function for blob on-events
-		var lag = time - SystemClock.beats;	
+		var lag = time - SystemClock.seconds;	
 		if(lag < 0) { ("message late"+(lag*1000)+"ms").postln; };
 
 		s.sendMsg('/s_new', instruments[gid], sid+sidOffset, \addToHead, gid+gidOffset, 'out', gid, 'gate', 0);
 		s.sendBundle(lag, ['/n_set', sid+sidOffset, 0, x, 1, z, 2, pid, 'gate', 1]);
 	}
 
-	off { |time, sid, gid, pid| // set callback function for blob off-events
-		var lag = time - SystemClock.beats;	
+	off { |time, sid| // set callback function for blob off-events
+		var lag = time - SystemClock.seconds;	
 		if(lag < 0) { ("message late"+(lag*1000)+"ms").postln; };
 
 		s.sendBundle(lag, ['/n_set', sid+sidOffset, 'gate', 0]);
 	}
 
-	set { |time, sid, gid, pid, x, z| // set callback function for blob set-events
-		var lag = time - SystemClock.beats;	
+	set { |time, sid, x, z| // set callback function for blob set-events
+		var lag = time - SystemClock.seconds;	
 		if(lag < 0) { ("message late"+(lag*1000)+"ms").postln; };
 
-		s.sendBundle(lag, ['/n_set', sid+sidOffset, 0, x, 1, z, 2, pid]);
+		s.sendBundle(lag, ['/n_set', sid+sidOffset, 0, x, 1, z]);
 	}
 
 	idle { |time|
-		var lag = time - SystemClock.beats;	
+		var lag = time - SystemClock.seconds;	
 		if(lag < 0) { ("message late"+(lag*1000)+"ms").postln; };
 
 		instruments do: {|v, gid| 

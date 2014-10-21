@@ -44,11 +44,11 @@
 	chimconf.sendMsg("/engines/enabled", true, {|msg| rx.connect;}); // connect via TCP
 	
 	chimconf.sendMsg("/engines/custom/reset");
-	chimconf.sendMsg("/engines/custom/append", "on",  "/noteOn", "i($g) i(3 12* 0.5- $n 18% 6/- $n 6/+) i(0x7f)");
-	chimconf.sendMsg("/engines/custom/append", "off",  "/noteOff", "i($g) i(3 12* 0.5- $n 18% 6/- $n 6/+) i(0x7f)");
-	chimconf.sendMsg("/engines/custom/append", "set", "/bend",  "i($g) i($x 0x3fff*)");
-	chimconf.sendMsg("/engines/custom/append", "set", "/control",  "i($g) i(0x27) i($z 0x3fff* 0x7f&)");
-	chimconf.sendMsg("/engines/custom/append", "set", "/control",  "i($g) i(0x07) i($z 0x3fff* 7>>)");
+	chimconf.sendMsg("/engines/custom/append", "on",  "/noteOn",		"i($g) i(35.5 $n 18% 6/- $n 3/ $x @@ $g[*+) i(0x7f)");
+	chimconf.sendMsg("/engines/custom/append", "off",  "/noteOff",	"i($g) i(35.5 $n 18% 6/- $n 3/ $g]*+) i(0x7f)");
+	chimconf.sendMsg("/engines/custom/append", "set", "/bend",			"i($g) i($x $g]- 0x2000* 0x1fff+)");
+	chimconf.sendMsg("/engines/custom/append", "set", "/control",		"i($g) i(0x27) i($z 0x3fff* 0x7f&)");
+	chimconf.sendMsg("/engines/custom/append", "set", "/control",		"i($g) i(0x07) i($z 0x3fff* 7>>)");
 
 	chimconf.sendMsg("/engines/custom/enabled", true);
 
@@ -63,28 +63,28 @@
 	midio.latency = 0; // send MIDI with no delay, instantaneously
 
 	on = OSCFunc({|msg, time, addr, port|
-		midio.latency = time - SystemClock.beats;
+		midio.latency = time - SystemClock.seconds;
 		if(midio.latency < 0) {("message late"+(midio.latency*1000)+"ms").postln};
 
 		midio.noteOn(msg[1], msg[2], msg[3]);
 	}, "/noteOn", rx);
 
 	off = OSCFunc({|msg, time, addr, port|
-		midio.latency = time - SystemClock.beats;
+		midio.latency = time - SystemClock.seconds;
 		if(midio.latency < 0) {("message late"+(midio.latency*1000)+"ms").postln};
 
 		midio.noteOff(msg[1], msg[2], msg[3]);
 	}, "/noteOff", rx);
 
 	bend = OSCFunc({|msg, time, addr, port|
-		midio.latency = time - SystemClock.beats;
+		midio.latency = time - SystemClock.seconds;
 		if(midio.latency < 0) {("message late"+(midio.latency*1000)+"ms").postln};
 
 		midio.bend(msg[1], msg[2]);
 	}, "/bend", rx);
 
 	control = OSCFunc({|msg, time, addr, port|
-		midio.latency = time - SystemClock.beats;
+		midio.latency = time - SystemClock.seconds;
 		if(midio.latency < 0) {("message late"+(midio.latency*1000)+"ms").postln};
 
 		midio.control(msg[1], msg[2], msg[3]);

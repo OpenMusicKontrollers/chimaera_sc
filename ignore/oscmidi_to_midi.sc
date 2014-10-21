@@ -68,7 +68,7 @@
 			var ran = n/3;
 			chimconf.sendMsg("/engines/oscmidi/reset");
 			chimconf.sendMsg("/engines/oscmidi/attributes/0", "control_change", bot, ran, 0x07);
-			chimconf.sendMsg("/engines/oscmidi/attributes/1", "note_pressure", bot, ran, 0x07);
+			chimconf.sendMsg("/engines/oscmidi/attributes/1", "control_change", bot, ran, 0x07);
 		}, clock:AppClock);
 	});
 

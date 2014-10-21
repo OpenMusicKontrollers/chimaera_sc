@@ -31,14 +31,14 @@
 	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
 	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
 
-	rx = NetAddr ("chimaera.local", 3333);
-	tx = NetAddr ("chimaera.local", 4444);
+	rx = NetAddr("chimaera.local", 3333);
+	tx = NetAddr("chimaera.local", 4444);
 
 	chimconf = ChimaeraConf(s, tx, tx);
 
 	rate = 3000;
 	chimconf.sendMsg("/engines/reset");
-	chimconf.sendMsg("/engines/offset", 0.002);
+	chimconf.sendMsg("/engines/offset", 0.0025);
 	chimconf.sendMsg("/engines/address", hostname++":"++3333, {
 		chimconf.sendMsg("/engines/server", false);
 		chimconf.sendMsg("/engines/mode", "osc.udp");
@@ -52,7 +52,7 @@
 	chimconf.sendMsg("/sensors/number", {|msg|
 		var n = msg[0];
 		chimout = ChimaeraOutMidi(s, n, [\base, \lead]);
-		chimout.effect = 0x07;
+		chimout.control = 0x07;
 		chimout.doublePrecision = true;
 		chimin = ChimaeraInTuio2(s, chimconf, rx, chimout);
 	});

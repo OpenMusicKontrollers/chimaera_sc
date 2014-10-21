@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2014 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,29 +21,19 @@
  *     distribution.
  */
 
-/*
- * low-pass filtered pulse width oscillator
- *
- * x := freq
- * y := cutoff frequency of low-pass filter
- */
-
 {|synthname, n|
-	var bot = 2*12 - 0.5 - (n % 18 / 6);
-	var top = n/3 + bot;
+	SynthDef(synthname, {|x=0, y=0, p=0, gate=0, out=0|
+		var env, freq, sig;
 
-	SynthDef(synthname, {|freq=0, amp=0, p=0, gate=1, out=0|
-		var suicide, up=0.1, down=0.5, env, sig, cutoff;
+		env = Linen.kr(gate, 0.01, 1.0, 1.0, doneAction:2);
 
-		suicide = DetectSilence.kr(Line.kr(0.1, 0.0, 1.0)+gate, 0.0001, down, doneAction:2);
-		env = Linen.kr(gate, up, 1.0, down);
+		freq = ChimaeraMapLinearCPS.kr(x, n:n, oct:2);
 
-		freq = LinExp.kr(freq, 0, 1, bot.midicps, top.midicps);
-
-		sig = VarSaw.ar(freq, 0.5, mul:amp*env);
-		sig = Blip.ar(freq, amp*20) * sig;
-		sig = RLPF.ar(sig, amp*900+100, 0.1);
+		sig = VarSaw.ar(freq, 0.5, mul:y*env);
+		sig = Blip.ar(freq, y*20) * sig;
+		sig = RLPF.ar(sig, y*900+100, 0.1);
 		sig = FreeVerb.ar(sig);
+
 		OffsetOut.ar(out, sig);
 	}).add;
 }

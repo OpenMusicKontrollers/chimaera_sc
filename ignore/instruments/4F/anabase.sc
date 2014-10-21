@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2014 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,29 +21,19 @@
  *     distribution.
  */
 
-/*
- * low-pass filtered pulse width oscillator
- *
- * x := freq
- * y := cutoff frequency of low-pass filter
- */
-
 {|synthname, n|
-	var bot = 2*12 - 0.5 - (n % 18 / 6);
-	var top = n/3 + bot;
+	SynthDef(synthname, {|x1=0, y1=0, p1=0, x2=0, y2=0, p2=0, gate=1, out=0|
+		var env, freq1, freq2, sig;
 
-	SynthDef(synthname, {|freq=0, amp=0, p=0, freq2=0, amp2=0, p2=0, gate=1, out=0|
-		var suicide, up=0.1, down=0.5, env, sig, cutoff;
+		env = Linen.kr(gate, 0.01, 1.0, 1.0, doneAction:2);
 
-		suicide = DetectSilence.kr(Line.kr(0.1, 0.0, 1.0)+gate, 0.0001, down, doneAction:2);
-		env = Linen.kr(gate, up, 1.0, down);
+		freq1 = ChimaeraMapLinearCPS.kr(x1, n:n, oct:2);
+		freq2 = ChimaeraMapLinearCPS.kr(x2, n:n, oct:2);
 
-		freq = LinExp.kr(freq, 0, 1, bot.midicps, top.midicps);
-		freq2 = LinExp.kr(freq2, 0, 1, bot.midicps, top.midicps);
-
-		sig = SyncSaw.ar(freq, freq2, mul:amp2*env);
-		sig = RLPF.ar(sig, amp*1900+100, 0.1);
+		sig = SyncSaw.ar(freq1, freq2, mul:y2*env);
+		sig = RLPF.ar(sig, y1*1900+100, 0.1);
 		sig = FreeVerb.ar(sig);
+
 		OffsetOut.ar(out, sig);
 	}).add;
 }
