@@ -28,7 +28,6 @@
 
 	hostname = "hostname".unixCmdGetStdOutLines[0]++".local";
 
-	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
 	tx = NetAddr("chimaera.local", 4444);
 
 	thisProcess.openUDPPort(3333); // open port 3333 to listen for dump messages

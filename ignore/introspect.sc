@@ -33,8 +33,6 @@
 
 	hostname = "hostname".unixCmdGetStdOutLines[0]++".local";
 
-	thisProcess.openUDPPort(4444); // open port 4444 for listening to chimaera configuration replies
-
 	tx = NetAddr ("chimaera.local", 4444);
 
 	chimconf = ChimaeraConf(s, tx, tx);

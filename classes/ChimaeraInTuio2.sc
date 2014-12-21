@@ -41,6 +41,8 @@ ChimaeraInTuio2 : ChimaeraIn {
 
 			fid = msg[1];
 			timestamp = time; //msg[2]; // TODO sclang does not support the OSC timestamp as argument
+			// dim = msg[3];
+			// src = msg[4];
 
 			if( (fid < lastFid) || (timestamp < lastTime), {
 				["TUIO2 packet missing or late"].postln;
