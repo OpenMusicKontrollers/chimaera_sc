@@ -22,7 +22,7 @@
  */
 
 {|synthname, n|
-	SynthDef(synthname, {|x=0, y=0, p=0, gate=0, out=0|
+	SynthDef(synthname, {|x=0, y=0, vx=0, vy=0, p=0, gate=0, out=0|
 		var freq, env, sig;
 
 		env = Linen.kr(gate, 0.01, 1.0, 1.0, doneAction:2);

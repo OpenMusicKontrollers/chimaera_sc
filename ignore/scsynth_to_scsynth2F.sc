@@ -62,6 +62,7 @@ s.doWhenBooted({
 	chimconf.sendMsg("/sensors/group/attributes/1", 0.0, 1.0, true, false, false); // add group
 
 	chimconf.sendMsg("/engines/scsynth/enabled", true); // enable scsynth output engine
+	chimconf.sendMsg("/engines/scsynth/derivatives", false);
 	chimconf.sendMsg("/engines/scsynth/attributes/0", \base, sidOffset, 0+gidOffset, 0, 0, true, true, \addToHead.asInt, false);
 	chimconf.sendMsg("/engines/scsynth/attributes/1", \lead, sidOffset, 1+gidOffset, 1, 0, true, true, \addToHead.asInt, false);
 

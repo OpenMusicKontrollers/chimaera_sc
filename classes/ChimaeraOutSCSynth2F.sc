@@ -40,8 +40,8 @@ ChimaeraOutSCSynth2F : ChimaeraOut {
 		var lag = time - SystemClock.seconds;	
 		if(lag < 0) { ("message late"+(lag*1000)+"ms").postln; };
 
-		s.sendMsg('/s_new', instruments[gid], sid+sidOffset, \addToHead, gid+gidOffset, 'out', gid, 'gate', 0);
-		s.sendBundle(lag, ['/n_set', sid+sidOffset, 0, x, 1, z, 2, pid, 'gate', 1]);
+		s.sendMsg('/s_new', instruments[gid], sid+sidOffset, \addToHead, gid+gidOffset, 4, pid, 'out', gid, 'gate', 1);
+		s.sendBundle(lag, ['/n_setn', sid+sidOffset, 0, 2, x, z]);
 	}
 
 	off { |time, sid| // set callback function for blob off-events
@@ -55,7 +55,7 @@ ChimaeraOutSCSynth2F : ChimaeraOut {
 		var lag = time - SystemClock.seconds;	
 		if(lag < 0) { ("message late"+(lag*1000)+"ms").postln; };
 
-		s.sendBundle(lag, ['/n_set', sid+sidOffset, 0, x, 1, z]);
+		s.sendBundle(lag, ['/n_setn', sid+sidOffset, 0, 2, x, z]);
 	}
 
 	idle { |time|

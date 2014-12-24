@@ -45,10 +45,11 @@ ChimaeraOutSCSynth4F : ChimaeraOut {
 		lookup[sid] = gid;
 
 		if(gid==0) {
-			s.sendMsg('/s_new', instruments[gid], sid+sidOffset, \addToHead, grp, 'out', gid, 'gate', 0);
-			s.sendBundle(lag, ['/n_set', sid+sidOffset, 0, x, 1, z, 2, pid, 'gate', 1]);
+			s.sendMsg('/s_new', instruments[gid], sid+sidOffset, \addToHead, grp, 4, pid, 'out', gid, 'gate', 1);
+			s.sendBundle(lag, ['/n_setn', sid+sidOffset, 0, 2, x, z]);
 		} {
-			s.sendBundle(lag, ['/n_set', grp, 3, x, 4, z, 5, pid]);
+			s.sendBundle(lag, ['/n_set', grp, 9, pid]);
+			s.sendBundle(lag, ['/n_setn', grp, 5, 2, x, z]);
 		};
 	}
 
@@ -74,9 +75,9 @@ ChimaeraOutSCSynth4F : ChimaeraOut {
 		gid = lookup[sid];
 
 		if(gid==0) {
-			s.sendBundle(lag, ['/n_set', sid+sidOffset, 0, x, 1, z]);
+			s.sendBundle(lag, ['/n_setn', sid+sidOffset, 0, 2, x, z]);
 		} {
-			s.sendBundle(lag, ['/n_set', grp, 3, x, 4, z]);
+			s.sendBundle(lag, ['/n_setn', grp, 5, 2, x, z]);
 		};
 	}
 
