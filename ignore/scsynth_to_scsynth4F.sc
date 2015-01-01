@@ -64,6 +64,7 @@ s.doWhenBooted({
 
 	chimconf.sendMsg("/engines/scsynth/enabled", true); // enable scsynth output engine
 	chimconf.sendMsg("/engines/scsynth/derivatives", false);
+	//chimconf.sendMsg("/engines/scsynth/derivatives", true); // for cello instrument
 	chimconf.sendMsg("/engines/scsynth/attributes/0", \base, sidOffset, grp, 0, 0, true, true, \addToHead.asInt, false);
 	chimconf.sendMsg("/engines/scsynth/attributes/1", \lead, sidOffset, grp, 0, 5, false, false, \addToHead.asInt, true);
 

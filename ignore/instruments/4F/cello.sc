@@ -23,16 +23,18 @@
 
 {|synthname, n|
 	SynthDef(synthname, {|x1=0, y1=0, vx1=0, vy1=0, p1=0, x2=0, y2=0, vx2=0, vy2=0, p2=0, gate=1, out=0|
-		var env, freq1, sig;
+		var env, freq, vol, cut, sig;
 
 		env = Linen.kr(gate, 0.01, 1.0, 1.0, doneAction:2);
 
-		freq1 = ChimaeraMapLinearCPS.kr(x1, n:n, oct:2);
-		y2 = y2 - OnePole.kr(y2, 0.998); // differentiate
-		y2 = RunningSum.kr(y2.abs.tan, 20)*0.05;
+		freq = ChimaeraMapLinearCPS.kr(x1, n:n, oct:2);
+		vol = LinExp.kr(y1, 0.0, 1.0, 0.5, 1.0);
+		cut = LinExp.kr(y1, 0.0, 1.0, 500, 1000);
 
-		sig = Mix.ar(Saw.ar([freq1, freq1/3, freq1*5], mul:y2*env));
-		sig = RLPF.ar(sig, y1*900+100, 0.1);
+		sig = Pluck.ar(WhiteNoise.ar(0.1), gate, 1, freq.reciprocal, 10, 0.20);
+		sig = (sig*y1*1000).distort;
+		sig = FreeVerb.ar(sig, mix:0.8, room:0.5, damp:0.1, mul:vol*env*vx2);
+		sig = RLPF.ar(sig, freq:cut, rq:0.3);
 
 		OffsetOut.ar(out, sig);
 	}).add;
