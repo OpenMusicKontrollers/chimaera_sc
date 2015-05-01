@@ -1,49 +1,44 @@
 /*
- * Copyright (c) 2014 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2015 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * This is free software: you can redistribute it and/or modify
+ * it under the terms of the Artistic License 2.0 as published by
+ * The Perl Foundation.
  * 
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * This source is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Artistic License 2.0 for more details.
  * 
- *     1. The origin of this software must not be misrepresented; you must not
- *     claim that you wrote the original software. If you use this software
- *     in a product, an acknowledgment in the product documentation would be
- *     appreciated but is not required.
- * 
- *     2. Altered source versions must be plainly marked as such, and must not be
- *     misrepresented as being the original software.
- * 
- *     3. This notice may not be removed or altered from any source
- *     distribution.
+ * You should have received a copy of the Artistic License 2.0
+ * along the source as a COPYING file. If not, obtain it from
+ * http://www.perlfoundation.org/artistic_license_2_0.
  */
 
 ChimaeraInDummy : ChimaeraIn {
-	var on, off, set, idle, lastTime;
+	var on, off, set, idle;
 
-	init {|s, conf, rx, iEngine|
+	init {|s, conf, iEngine|
 		engine = iEngine;
 
 		conf.sendMsg("/engines/dummy/enabled", true); // enable dummy output engine
 		conf.sendMsg("/engines/dummy/redundancy", false); // disable redundant output
+		conf.sendMsg("/engines/dummy/derivatives", true); // enable derivatives 
 
 		on = OSCFunc({ |msg, time, addr, port|
-			engine.on(time, msg[1], msg[2], msg[3], msg[4], msg[5]) // sid, gid, pid, x, z
-		}, "/on", rx);
+			engine.on(time, msg[1], msg[2], msg[3], msg[4], msg[5], msg[6], msg[7]) // sid, gid, pid, x, z, vx, vz
+		}, "/on", conf.rx);
 
 		off = OSCFunc({ |msg, time, addr, port|
 			engine.off(time, msg[1]) // sid
-		}, "/off", rx);
+		}, "/off", conf.rx);
 
 		set = OSCFunc({ |msg, time, addr, port|
-			engine.set(time, msg[1], msg[2], msg[3]) // sid, x, z
-		}, "/set", rx);
+			engine.set(time, msg[1], msg[2], msg[3], msg[4], msg[5]) // sid, x, z, vx, vz
+		}, "/set", conf.rx);
 
 		idle = OSCFunc({ |msg, time, addr, port|
 			engine.idle(time);
-		}, "/idle", rx);
+		}, "/idle", conf.rx);
 	}
 }

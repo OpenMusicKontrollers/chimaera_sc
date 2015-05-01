@@ -1,91 +1,68 @@
 #!/usr/bin/env sclang
 
 /*
- * Copyright (c) 2014 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2015 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * This is free software: you can redistribute it and/or modify
+ * it under the terms of the Artistic License 2.0 as published by
+ * The Perl Foundation.
  * 
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * This source is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Artistic License 2.0 for more details.
  * 
- *     1. The origin of this software must not be misrepresented; you must not
- *     claim that you wrote the original software. If you use this software
- *     in a product, an acknowledgment in the product documentation would be
- *     appreciated but is not required.
- * 
- *     2. Altered source versions must be plainly marked as such, and must not be
- *     misrepresented as being the original software.
- * 
- *     3. This notice may not be removed or altered from any source
- *     distribution.
+ * You should have received a copy of the Artistic License 2.0
+ * along the source as a COPYING file. If not, obtain it from
+ * http://www.perlfoundation.org/artistic_license_2_0.
  */
 
 {
-	var rx, tx, rate, chimconf, chimin, chimout, midio, on , off, bend, control;
+	var chimconf, midio, on , off, bend, control;
 
-	thisProcess.openUDPPort(3333); // open port 3333 to listen for Tuio messages
+	chimconf = ChimaeraConf(s,
+		addr:"chimaera.local", prot:\tcp, target:\lang);
 
-	rx = NetAddr ("chimaera.local", 3333);
-	tx = NetAddr ("chimaera.local", 4444);
-
-	chimconf = ChimaeraConf(s, tx, tx);
-
-	rate = 3000;
-	chimconf.sendMsg("/engines/reset");
-	chimconf.sendMsg("/engines/offset", 0.0025);
-
-	chimconf.sendMsg("/engines/enabled", false);
-	chimconf.sendMsg("/engines/server", true);
-	chimconf.sendMsg("/engines/mode", "osc.tcp");
-	chimconf.sendMsg("/engines/enabled", true, {|msg| rx.connect;}); // connect via TCP
-	
 	chimconf.sendMsg("/engines/custom/reset");
-	chimconf.sendMsg("/engines/custom/append", "on",  "/noteOn",		"i($g) i(35.5 $n 18% 6/- $n 3/ $x @@ $g[*+) i(0x7f)");
-	chimconf.sendMsg("/engines/custom/append", "off",  "/noteOff",	"i($g) i(35.5 $n 18% 6/- $n 3/ $g]*+) i(0x7f)");
-	chimconf.sendMsg("/engines/custom/append", "set", "/bend",			"i($g) i($x $g]- 0x2000* 0x1fff+)");
-	chimconf.sendMsg("/engines/custom/append", "set", "/control",		"i($g) i(0x27) i($z 0x3fff* 0x7f&)");
-	chimconf.sendMsg("/engines/custom/append", "set", "/control",		"i($g) i(0x07) i($z 0x3fff* 7>>)");
-
+	chimconf.sendMsg("/engines/custom/append",
+		"on",  "/noteOn",		"i($g) i(35.5 $n 18% 6/- $n 3/ $x @@ $g[*+) i(0x7f)");
+	chimconf.sendMsg("/engines/custom/append",
+		"off", "/noteOff",	  "i($g) i(35.5 $n 18% 6/- $n 3/ $g]*+) i(0x7f)");
+	chimconf.sendMsg("/engines/custom/append",
+		"set", "/bend",			"i($g) i($x $g]- 0x2000* 0x1fff+)");
+	chimconf.sendMsg("/engines/custom/append",
+		"set", "/control",		"i($g) i(0x27) i($z 0x3fff* 0x7f&)");
+	chimconf.sendMsg("/engines/custom/append",
+		"set", "/control",		"i($g) i(0x07) i($z 0x3fff* 7>>)");
 	chimconf.sendMsg("/engines/custom/enabled", true);
 
-	chimconf.sendMsg("/sensors/rate", rate);
-	chimconf.sendMsg("/sensors/group/reset"); // reset groups
-	chimconf.sendMsg("/sensors/group/attributes/0", 0.0, 1.0, false, true, false); // add group
-	chimconf.sendMsg("/sensors/group/attributes/1", 0.0, 1.0, true, false, false); // add group
+	chimconf.sendMsg("/sensors/group/reset");
+	chimconf.sendMsg("/sensors/group/attributes/0",
+		0.0, 1.0, false, true, false);
+	chimconf.sendMsg("/sensors/group/attributes/1",
+		0.0, 1.0, true, false, false);
 
 	MIDIClient.init;
-	//midio = MIDIOut(0, MIDIClient.destinations[0].uid); // use this on MacOS, Windows to connect to the MIDI stream of choice
-	midio = MIDIOut(0); // use this on Linux, as patching is usually done via ALSA/JACK
-	midio.latency = 0; // send MIDI with no delay, instantaneously
+	//midio = MIDIOut(0, MIDIClient.destinations[0].uid); // use this on Windows
+	midio = MIDIOut(0); // use this on Linux/OSX
 
 	on = OSCFunc({|msg, time, addr, port|
-		midio.latency = time - SystemClock.seconds;
-		if(midio.latency < 0) {("message late"+(midio.latency*1000)+"ms").postln};
-
+		midio.latency = ChimaeraOut.timeToLatency(time);
 		midio.noteOn(msg[1], msg[2], msg[3]);
-	}, "/noteOn", rx);
+	}, "/noteOn", chimconf.rx);
 
 	off = OSCFunc({|msg, time, addr, port|
-		midio.latency = time - SystemClock.seconds;
-		if(midio.latency < 0) {("message late"+(midio.latency*1000)+"ms").postln};
-
+		midio.latency = ChimaeraOut.timeToLatency(time);
 		midio.noteOff(msg[1], msg[2], msg[3]);
-	}, "/noteOff", rx);
+	}, "/noteOff", chimconf.rx);
 
 	bend = OSCFunc({|msg, time, addr, port|
-		midio.latency = time - SystemClock.seconds;
-		if(midio.latency < 0) {("message late"+(midio.latency*1000)+"ms").postln};
-
+		midio.latency = ChimaeraOut.timeToLatency(time);
 		midio.bend(msg[1], msg[2]);
-	}, "/bend", rx);
+	}, "/bend", chimconf.rx);
 
 	control = OSCFunc({|msg, time, addr, port|
-		midio.latency = time - SystemClock.seconds;
-		if(midio.latency < 0) {("message late"+(midio.latency*1000)+"ms").postln};
-
+		midio.latency = ChimaeraOut.timeToLatency(time);
 		midio.control(msg[1], msg[2], msg[3]);
-	}, "/control", rx);
+	}, "/control", chimconf.rx);
 }.value;

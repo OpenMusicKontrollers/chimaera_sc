@@ -1,42 +1,38 @@
 /*
- * Copyright (c) 2014 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2015 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * This is free software: you can redistribute it and/or modify
+ * it under the terms of the Artistic License 2.0 as published by
+ * The Perl Foundation.
  * 
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * This source is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Artistic License 2.0 for more details.
  * 
- *     1. The origin of this software must not be misrepresented; you must not
- *     claim that you wrote the original software. If you use this software
- *     in a product, an acknowledgment in the product documentation would be
- *     appreciated but is not required.
- * 
- *     2. Altered source versions must be plainly marked as such, and must not be
- *     misrepresented as being the original software.
- * 
- *     3. This notice may not be removed or altered from any source
- *     distribution.
+ * You should have received a copy of the Artistic License 2.0
+ * along the source as a COPYING file. If not, obtain it from
+ * http://www.perlfoundation.org/artistic_license_2_0.
  */
 
 ChimaeraConf {
-	var tx, rx, count, success, fail, cb;
+	var tx, <rx, count, success, fail, cb;
 
-	*new {|s, iTx, iRx|
-		^super.new.init(s, iTx, iRx);
+	*new {|s, addr="chimaera.local", prot=\udp, target=\lang, rate=3000, offset=0.0025|
+		^super.new.init(s, addr, prot, target, rate, offset);
 	}
 
 	*initClass {
 	}
 
-	initConn {|iTx, iRx|
-		tx = iTx;
-		rx = iRx;
+	init {|s, addr, prot, target, rate, offset|
+		var port;
+		tx = NetAddr(addr, 4444);
+		rx = NetAddr(addr, 3333);
 		cb = Order.new;
 		count = 1000.rand;
 
+		// create success callback function
 		success = OSCFunc({|msg, time, addr, port|
 			var id;
 			var dest;
@@ -45,8 +41,9 @@ ChimaeraConf {
 			id = msg.removeAt(0);
 			dest = msg.removeAt(0);
 			this.success(id, dest, msg);
-		}, "/success", rx);
+		}, "/success", tx);
 
+		// create fail callback function
 		fail = OSCFunc({|msg, time, addr, port|
 			var id;
 			var dest;
@@ -55,45 +52,78 @@ ChimaeraConf {
 			id = msg.removeAt(0);
 			dest = msg.removeAt(0);
 			this.fail(id, dest, msg);
-		}, "/fail", rx);
-	}
+		}, "/fail", tx);
+	
+		// set port depending on target
+		if(target == \lang, {
+			port = NetAddr.langPort
+		}, { // target == \serv
+			port = s.addr.port
+		});
 
-	init {|s, iTx, iRx|
-		this.initConn(iTx, iRx);
+		// initialization
+		this.sendMsg("/engines/enabled", false);
+		this.sendMsg("/engines/reset");
+		this.sendMsg("/engines/offset", offset);
+		if(prot == \udp, {
+			this.sendMsg("/engines/address", "this:"++port, {
+				this.sendMsg("/engines/server", false);
+				this.sendMsg("/engines/mode", "osc.udp");
+				this.sendMsg("/engines/enabled", true);
+			});
+		}, { // prot == \tcp
+			if(target == \lang, {
+				this.sendMsg("/engines/server", true);
+				this.sendMsg("/engines/mode", "osc.tcp");
+				this.sendMsg("/engines/enabled", true, {|msg| rx.connect;});
+			}, { // target == \serv
+				this.sendMsg("/engines/address", "this:"++port, {
+					this.sendMsg("/engines/server", false);
+					this.sendMsg("/engines/mode", "osc.tcp");
+					this.sendMsg("/engines/enabled", true);
+				});
+			});
+		});
+		if(rate > 2000, {
+			this.sendMsg("/engines/parallel", true);
+		}, {
+			this.sendMsg("/engines/parallel", false);
+		});
+		this.sendMsg("/sensors/rate", rate);
 	}
 
 	success {|id, dest, msg|
-		if (cb[id].isFunction) {
+		if(cb[id].isFunction, {
 			cb.[id].value(msg);
-		};
+		});
 		cb.removeAt(id);
 		("Chimaera request #"++id+"succeeded:"+dest).postln;
 	}
 
 	fail {|id, dest, msg|
-		if (cb[id].notNil) {
+		if(cb[id].notNil, {
 			cb.removeAt(id);
 			("Chimaera request #"++id+"failed:"+dest+"("++msg[0]++")").postln;
-		};
+		});
 	}
 
 	sendMsg {|... args|
 		var path, callback, res;
 
 		path = args.removeAt(0);
-		if(args[args.size-1].isFunction) {
+		if(args[args.size-1].isFunction, {
 			callback = args.pop;
-		} {
+		}, {
 			callback = true;
-		};
+		});
 		cb[count] = callback;
-		if( (args[args.size-1].isArray) && (args[args.size-1].isString.not) ) {
+		if( (args[args.size-1].isArray) && (args[args.size-1].isString.not), {
 			var arr = args.pop;
 			args = args ++ arr;
 			tx.performList(\sendMsg, path, count, args);
-		} {
+		}, {
 			tx.performList(\sendMsg, path, count, args);
-		};
+		});
 
 		// send timeout to ourselfs
 		AppClock.sched(1, {

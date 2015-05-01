@@ -1,24 +1,18 @@
 /*
- * Copyright (c) 2014 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2015 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * This is free software: you can redistribute it and/or modify
+ * it under the terms of the Artistic License 2.0 as published by
+ * The Perl Foundation.
  * 
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * This source is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Artistic License 2.0 for more details.
  * 
- *     1. The origin of this software must not be misrepresented; you must not
- *     claim that you wrote the original software. If you use this software
- *     in a product, an acknowledgment in the product documentation would be
- *     appreciated but is not required.
- * 
- *     2. Altered source versions must be plainly marked as such, and must not be
- *     misrepresented as being the original software.
- * 
- *     3. This notice may not be removed or altered from any source
- *     distribution.
+ * You should have received a copy of the Artistic License 2.0
+ * along the source as a COPYING file. If not, obtain it from
+ * http://www.perlfoundation.org/artistic_license_2_0.
  */
 
 ChimaeraOutSCSynth4F : ChimaeraOut {
@@ -38,25 +32,23 @@ ChimaeraOutSCSynth4F : ChimaeraOut {
 		lookup = Order.new; // lookup table of currently active blobs
 	}
 
-	on { |time, sid, gid, pid, x, z| // set callback function for blob on-events
-		var lag = time - SystemClock.seconds;	
-		if(lag < 0) { ("message late"+(lag*1000)+"ms").postln; };
+	on {|time, sid, gid, pid, x, z, vx, vz| // set callback function for blob on-events
+		var lag = ChimaeraOut.timeToLatency(time);
 
 		lookup[sid] = gid;
 
 		if(gid==0) {
 			s.sendMsg('/s_new', instruments[gid], sid+sidOffset, \addToHead, grp, 4, pid, 'out', gid, 'gate', 1);
-			s.sendBundle(lag, ['/n_setn', sid+sidOffset, 0, 2, x, z]);
+			s.sendBundle(lag, ['/n_setn', sid+sidOffset, 0, 4, x, z, vx, vz]);
 		} {
 			s.sendBundle(lag, ['/n_set', grp, 9, pid]);
-			s.sendBundle(lag, ['/n_setn', grp, 5, 2, x, z]);
+			s.sendBundle(lag, ['/n_setn', grp, 5, 4, x, z, vx, vz]);
 		};
 	}
 
-	off { |time, sid| // set callback function for blob off-events
+	off {|time, sid| // set callback function for blob off-events
+		var lag = ChimaeraOut.timeToLatency(time);
 		var gid;
-		var lag = time - SystemClock.seconds;	
-		if(lag < 0) { ("message late"+(lag*1000)+"ms").postln; };
 		
 		gid = lookup[sid];
 
@@ -67,23 +59,21 @@ ChimaeraOutSCSynth4F : ChimaeraOut {
 		lookup[sid] = nil;
 	}
 
-	set { |time, sid, x, z| // set callback function for blob set-events
+	set {|time, sid, x, z, vx, vz| // set callback function for blob set-events
+		var lag = ChimaeraOut.timeToLatency(time);
 		var gid;
-		var lag = time - SystemClock.seconds;	
-		if(lag < 0) { ("message late"+(lag*1000)+"ms").postln; };
 		
 		gid = lookup[sid];
 
 		if(gid==0) {
-			s.sendBundle(lag, ['/n_setn', sid+sidOffset, 0, 2, x, z]);
+			s.sendBundle(lag, ['/n_setn', sid+sidOffset, 0, 4, x, z, vx, vz]);
 		} {
-			s.sendBundle(lag, ['/n_setn', grp, 5, 2, x, z]);
+			s.sendBundle(lag, ['/n_setn', grp, 5, 4, x, z, vx, vz]);
 		};
 	}
 
-	idle { |time|
-		var lag = time - SystemClock.seconds;	
-		if(lag < 0) { ("message late"+(lag*1000)+"ms").postln; };
+	idle {|time|
+		var lag = ChimaeraOut.timeToLatency(time);
 
 		s.sendBundle(lag, ['/n_set', 0+gidOffset, 'gate', 0]);
 	}

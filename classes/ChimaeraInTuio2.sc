@@ -1,30 +1,24 @@
 /*
- * Copyright (c) 2014 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2015 Hanspeter Portner (dev@open-music-kontrollers.ch)
  * 
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * This is free software: you can redistribute it and/or modify
+ * it under the terms of the Artistic License 2.0 as published by
+ * The Perl Foundation.
  * 
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * This source is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Artistic License 2.0 for more details.
  * 
- *     1. The origin of this software must not be misrepresented; you must not
- *     claim that you wrote the original software. If you use this software
- *     in a product, an acknowledgment in the product documentation would be
- *     appreciated but is not required.
- * 
- *     2. Altered source versions must be plainly marked as such, and must not be
- *     misrepresented as being the original software.
- * 
- *     3. This notice may not be removed or altered from any source
- *     distribution.
+ * You should have received a copy of the Artistic License 2.0
+ * along the source as a COPYING file. If not, obtain it from
+ * http://www.perlfoundation.org/artistic_license_2_0.
  */
 
 ChimaeraInTuio2 : ChimaeraIn {
 	var firstFrame, frm, tok, alv, blobs, blobsOld, lastFid, lastTime, ignore;
 
-	init {|s, conf, rx, iEngine|
+	init {|s, conf, iEngine|
 		engine = iEngine;
 
 		firstFrame = 1;
@@ -35,16 +29,14 @@ ChimaeraInTuio2 : ChimaeraIn {
 		ignore = false;
 
 		conf.sendMsg("/engines/tuio2/enabled", true); // enable Tuio2 output engine
+		conf.sendMsg("/engines/tuio2/derivatives", true); // enable derivatives 
 
 		frm = OSCFunc({ |msg, time, addr, port|
-			var fid, timestamp;
+			var fid;
 
 			fid = msg[1];
-			timestamp = time; //msg[2]; // TODO sclang does not support the OSC timestamp as argument
-			// dim = msg[3];
-			// src = msg[4];
 
-			if( (fid < lastFid) || (timestamp < lastTime), {
+			if( (fid < lastFid) || (time < lastTime), {
 				["TUIO2 packet missing or late"].postln;
 				ignore = true;
 			}, {
@@ -52,11 +44,11 @@ ChimaeraInTuio2 : ChimaeraIn {
 			});
 	
 			lastFid = fid;
-			lastTime = timestamp;
-		}, "/tuio2/frm", rx);
+			lastTime = time;
+		}, "/tuio2/frm", conf.rx);
 
 		tok = OSCFunc({ |msg, time, addr, port|
-			var o, sid, pid, gid, x, z;
+			var o, sid, pid, gid, x, z, vx, vz;
 
 			if(ignore == false, {
 				sid = msg[1];
@@ -65,10 +57,12 @@ ChimaeraInTuio2 : ChimaeraIn {
 				x = msg[4];
 				z = msg[5];
 				//a = msg[6]; // not used
+				vx = msg[7];
+				vz = msg[8];
 
-				blobs[sid] = [time, sid, gid, pid, x, z];
+				blobs[sid] = [time, sid, gid, pid, x, z, vx, vz];
 			});
-		}, "/tuio2/tok", rx);
+		}, "/tuio2/tok", conf.rx);
 
 		alv = OSCFunc({ |msg, time, addr, port|
 			var n, tmp;
@@ -94,14 +88,14 @@ ChimaeraInTuio2 : ChimaeraIn {
 				msg do: {|v|
 					var b = blobs[v];
 					if(blobsOld.indexOf(v).isNil, {
-						engine.on(b[0], b[1], b[2], b[3], b[4], b[5]); // time, sid, gid, pid, x, z
+						engine.on(b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]); // time, sid, gid, pid, x, z, vx, vz
 					}, {
-						engine.set(b[0], b[1], b[4], b[5]); // time, sid, x, z
+						engine.set(b[0], b[1], b[4], b[5], b[6], b[7]); // time, sid, x, z, vx, vz
 					});
 				};
 
 				blobsOld = msg;
 			});
-		}, "/tuio2/alv", rx);
+		}, "/tuio2/alv", conf.rx);
 	}
 }
