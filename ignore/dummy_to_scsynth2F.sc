@@ -29,10 +29,18 @@ s.doWhenBooted({
 		addr:"chimaera.local", prot:\tcp);
 
 	chimconf.sendMsg("/sensors/group/reset");
-	chimconf.sendMsg("/sensors/group/attributes/0",
-		0.0, 1.0, false, true, false);
-	chimconf.sendMsg("/sensors/group/attributes/1",
-		0.0, 1.0, true, false, false);
+
+	chimconf.sendMsg("/sensors/group/attributes/0/min", 0.0);
+	chimconf.sendMsg("/sensors/group/attributes/0/max", 1.0);
+	chimconf.sendMsg("/sensors/group/attributes/0/north", false);
+	chimconf.sendMsg("/sensors/group/attributes/0/south", true);
+	chimconf.sendMsg("/sensors/group/attributes/0/scale", false);
+
+	chimconf.sendMsg("/sensors/group/attributes/1/min", 0.0);
+	chimconf.sendMsg("/sensors/group/attributes/1/max", 1.0);
+	chimconf.sendMsg("/sensors/group/attributes/1/north", true);
+	chimconf.sendMsg("/sensors/group/attributes/1/south", false);
+	chimconf.sendMsg("/sensors/group/attributes/1/scale", false);
 
 	chimconf.sendMsg("/sensors/number", {|msg|
 		var n = msg[0];

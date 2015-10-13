@@ -42,17 +42,42 @@ s.doWhenBooted({
 		addr:"chimaera.local", prot:\tcp, target:\serv);
 
 	chimconf.sendMsg("/sensors/group/reset");
-	chimconf.sendMsg("/sensors/group/attributes/0",
-		0.0, 1.0, false, true, false);
-	chimconf.sendMsg("/sensors/group/attributes/1",
-		0.0, 1.0, true, false, false);
+
+	chimconf.sendMsg("/sensors/group/attributes/0/min", 0.0);
+	chimconf.sendMsg("/sensors/group/attributes/0/max", 1.0);
+	chimconf.sendMsg("/sensors/group/attributes/0/north", false);
+	chimconf.sendMsg("/sensors/group/attributes/0/south", true);
+	chimconf.sendMsg("/sensors/group/attributes/0/scale", false);
+
+	chimconf.sendMsg("/sensors/group/attributes/1/min", 0.0);
+	chimconf.sendMsg("/sensors/group/attributes/1/max", 1.0);
+	chimconf.sendMsg("/sensors/group/attributes/1/north", true);
+	chimconf.sendMsg("/sensors/group/attributes/1/south", false);
+	chimconf.sendMsg("/sensors/group/attributes/1/scale", false);
 
 	chimconf.sendMsg("/engines/scsynth/enabled", true);
+	chimconf.sendMsg("/engines/scsynth/reset");
 	chimconf.sendMsg("/engines/scsynth/derivatives", true);
-	chimconf.sendMsg("/engines/scsynth/attributes/0",
-		\base, sidOffset, 0+gidOffset, 0, 0, true, true, \addToHead.asInt, false);
-	chimconf.sendMsg("/engines/scsynth/attributes/1",
-		\lead, sidOffset, 1+gidOffset, 1, 0, true, true, \addToHead.asInt, false);
+	
+	chimconf.sendMsg("/engines/scsynth/attributes/0/name", \base);
+	chimconf.sendMsg("/engines/scsynth/attributes/0/sid_offset", sidOffset);
+	chimconf.sendMsg("/engines/scsynth/attributes/0/gid_offset", 0+gidOffset);
+	chimconf.sendMsg("/engines/scsynth/attributes/0/out", 0);
+	chimconf.sendMsg("/engines/scsynth/attributes/0/arg_offset", 0);
+	chimconf.sendMsg("/engines/scsynth/attributes/0/allocate", true);
+	chimconf.sendMsg("/engines/scsynth/attributes/0/gate", true);
+	chimconf.sendMsg("/engines/scsynth/attributes/0/tail", \addToHead.asInt);
+	chimconf.sendMsg("/engines/scsynth/attributes/0/group", false);
+	
+	chimconf.sendMsg("/engines/scsynth/attributes/1/name", \lead);
+	chimconf.sendMsg("/engines/scsynth/attributes/1/sid_offset", sidOffset);
+	chimconf.sendMsg("/engines/scsynth/attributes/1/gid_offset", 1+gidOffset);
+	chimconf.sendMsg("/engines/scsynth/attributes/1/out", 1);
+	chimconf.sendMsg("/engines/scsynth/attributes/1/arg_offset", 0);
+	chimconf.sendMsg("/engines/scsynth/attributes/1/allocate", true);
+	chimconf.sendMsg("/engines/scsynth/attributes/1/gate", true);
+	chimconf.sendMsg("/engines/scsynth/attributes/1/tail", \addToHead.asInt);
+	chimconf.sendMsg("/engines/scsynth/attributes/1/group", false);
 
 	chimconf.sendMsg("/sensors/number", {|msg|
 		var n=msg[0];

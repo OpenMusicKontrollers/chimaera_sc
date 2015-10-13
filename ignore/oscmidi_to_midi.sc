@@ -24,10 +24,18 @@
 		addr:"chimaera.local", prot:\tcp);
 
 	chimconf.sendMsg("/sensors/group/reset");
-	chimconf.sendMsg("/sensors/group/attributes/0",
-		0.0, 1.0, false, true, false);
-	chimconf.sendMsg("/sensors/group/attributes/1",
-		0.0, 1.0, true, false, false);
+
+	chimconf.sendMsg("/sensors/group/attributes/0/min", 0.0);
+	chimconf.sendMsg("/sensors/group/attributes/0/max", 1.0);
+	chimconf.sendMsg("/sensors/group/attributes/0/north", false);
+	chimconf.sendMsg("/sensors/group/attributes/0/south", true);
+	chimconf.sendMsg("/sensors/group/attributes/0/scale", false);
+
+	chimconf.sendMsg("/sensors/group/attributes/1/min", 0.0);
+	chimconf.sendMsg("/sensors/group/attributes/1/max", 1.0);
+	chimconf.sendMsg("/sensors/group/attributes/1/north", true);
+	chimconf.sendMsg("/sensors/group/attributes/1/south", false);
+	chimconf.sendMsg("/sensors/group/attributes/1/scale", false);
 
 	chimconf.sendMsg("/engines/oscmidi/enabled", true);
 	chimconf.sendMsg("/engines/oscmidi/multi", true);
@@ -40,10 +48,16 @@
 			var bot = 3*12 - 0.5 - (n % 18 / 6);
 			var ran = n/3;
 			chimconf.sendMsg("/engines/oscmidi/reset");
-			chimconf.sendMsg("/engines/oscmidi/attributes/0",
-				"control_change", bot, ran, 0x07);
-			chimconf.sendMsg("/engines/oscmidi/attributes/1",
-				"control_change", bot, ran, 0x07);
+
+			chimconf.sendMsg("/engines/oscmidi/attributes/0/mapping", "control_change");
+			chimconf.sendMsg("/engines/oscmidi/attributes/0/offset", bot);
+			chimconf.sendMsg("/engines/oscmidi/attributes/0/range", ran);
+			chimconf.sendMsg("/engines/oscmidi/attributes/0/controller", 0x07);
+
+			chimconf.sendMsg("/engines/oscmidi/attributes/1/mapping", "control_change");
+			chimconf.sendMsg("/engines/oscmidi/attributes/1/offset", bot);
+			chimconf.sendMsg("/engines/oscmidi/attributes/1/range", ran);
+			chimconf.sendMsg("/engines/oscmidi/attributes/1/controller", 0x07);
 		}, clock:AppClock);
 	});
 
