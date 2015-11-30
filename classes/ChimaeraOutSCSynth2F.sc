@@ -19,7 +19,7 @@ ChimaeraOutSCSynth2F : ChimaeraOut {
 	var sidOffset, gidOffset, instruments, s;
 
 	init {|iS, n=160, groups|
-		if(group.notNil, {
+		if(groups.notNil, {
 			instruments = groups;
 		}, {
 			instruments = [\synth_0, \synth_1, \synth_2, \synth_3, \synth_4, \synth_5, \synth_6, \synth_7];
