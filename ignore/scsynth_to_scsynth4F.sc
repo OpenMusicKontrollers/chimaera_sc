@@ -20,8 +20,8 @@
 s.options.protocol = \tcp;
 s.options.blockSize = 0x10;
 s.options.memSize = 0x10000;
-s.options.numInputBusChannels = 8;
-s.options.numOutputBusChannels = 8;
+s.options.numInputBusChannels = 0;
+s.options.numOutputBusChannels = 1;
 s.latency = nil;
 s.boot;
 
