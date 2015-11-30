@@ -36,13 +36,13 @@
 		(path++inst++".sc").load.value(group, n);
 	};
 
-	loadInst.value(\base, baseInst[0]);
+	loadInst.value(\inst_0, baseInst[0]);
 
 	win = Window.new("4F Instruments", Rect(200,200,200,100)).front;
 
 	adrop = PopUpMenu(win, Rect(10,10,180,20));
 	adrop.items = baseInst;
 	adrop.action = {|menu|
-		loadInst.value(\base, menu.item);
+		loadInst.value(\inst_0, menu.item);
 	};
 }

@@ -20,6 +20,8 @@
 s.options.protocol = \tcp;
 s.options.blockSize = 0x10;
 s.options.memSize = 0x10000;
+s.options.numInputBusChannels = 8;
+s.options.numOutputBusChannels = 8;
 s.latency = nil;
 s.boot;
 
@@ -59,24 +61,14 @@ s.doWhenBooted({
 	chimconf.sendMsg("/engines/scsynth/reset");
 	chimconf.sendMsg("/engines/scsynth/derivatives", true);
 
-	chimconf.sendMsg("/engines/scsynth/attributes/0/name", \base);
-	chimconf.sendMsg("/engines/scsynth/attributes/0/sid_offset", sidOffset);
 	chimconf.sendMsg("/engines/scsynth/attributes/0/gid_offset", grp);
 	chimconf.sendMsg("/engines/scsynth/attributes/0/out", 0);
-	chimconf.sendMsg("/engines/scsynth/attributes/0/arg_offset", 0);
-	chimconf.sendMsg("/engines/scsynth/attributes/0/allocate", true);
-	chimconf.sendMsg("/engines/scsynth/attributes/0/gate", true);
-	chimconf.sendMsg("/engines/scsynth/attributes/0/tail", \addToHead.asInt);
-	chimconf.sendMsg("/engines/scsynth/attributes/0/group", false);
 	
-	chimconf.sendMsg("/engines/scsynth/attributes/1/name", \lead);
-	chimconf.sendMsg("/engines/scsynth/attributes/1/sid_offset", sidOffset);
 	chimconf.sendMsg("/engines/scsynth/attributes/1/gid_offset", grp);
 	chimconf.sendMsg("/engines/scsynth/attributes/1/out", 0);
 	chimconf.sendMsg("/engines/scsynth/attributes/1/arg_offset", 5);
 	chimconf.sendMsg("/engines/scsynth/attributes/1/allocate", false);
 	chimconf.sendMsg("/engines/scsynth/attributes/1/gate", false);
-	chimconf.sendMsg("/engines/scsynth/attributes/1/tail", \addToHead.asInt);
 	chimconf.sendMsg("/engines/scsynth/attributes/1/group", true);
 
 	chimconf.sendMsg("/sensors/number", {|msg|

@@ -15,20 +15,18 @@
  * http://www.perlfoundation.org/artistic_license_2_0.
  */
 
-{|n, baseSym, leadSym|
-	var baseInst, leadInst, loadInst, win, adrop, bdrop, path;
+{|n=160, symbols=nil|
+	var instruments, loadInst, win, drops, path;
 
 	/*
-	 * populate instrument name arrays
+	 * populate instrument name array
 	 */
-	baseInst = Array.new(64);
-	leadInst = Array.new(64);
+	instruments = Array.new(64);
 	path = "./instruments/2F/";
 	p = PathName(path);
 	p.filesDo({|n|
 		var name = n.fileNameWithoutExtension;
-		baseInst.add(name);
-		leadInst.add(name);
+		instruments.add(name);
 	});
 
 	/*
@@ -38,20 +36,20 @@
 		(path++inst++".sc").load.value(group, n);
 	};
 
-	loadInst.value(\base, baseInst[0]);
-	loadInst.value(\lead, leadInst[0]);
+	if(symbols.isNil, {
+		symbols = [\synth_0, \synth_1, \synth_2, \synth_3, \synth_4, \synth_5, \synth_6, \synth_7];
+	});
 
-	win = Window.new("2F Instruments ("++n++")", Rect(200,200,400,100)).front;
+	win = Window.new("2F Instruments ("++n++")", Rect(0, 0, 200, 20*symbols.size+20)).front;
 
-	adrop = PopUpMenu(win, Rect(10,10,180,20));
-	adrop.items = baseInst;
-	adrop.action = {|menu|
-		loadInst.value(baseSym, menu.item);
-	};
+	symbols.do({|sym, i|
+		var drop = PopUpMenu(win, Rect(10, 20*i+10, 180, 20));
+		drop.items = instruments;
+		drop.action = {|menu|
+			loadInst.value(sym, menu.item);
+		};
+		drops.add(drop);
 
-	bdrop = PopUpMenu(win, Rect(200,10,180,20));
-	bdrop.items = leadInst;
-	bdrop.action = {|menu|
-		loadInst.value(leadSym, menu.item);
-	};
+		loadInst.value(sym, instruments[0]);
+	});
 }

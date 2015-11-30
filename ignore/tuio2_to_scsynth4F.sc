@@ -19,6 +19,8 @@
 
 s.options.blockSize = 0x10;
 s.options.memSize = 0x10000;
+s.options.numInputBusChannels = 8;
+s.options.numOutputBusChannels = 8;
 s.latency = nil;
 s.boot;
 
@@ -44,10 +46,10 @@ s.doWhenBooted({
 
 	chimconf.sendMsg("/sensors/number", {|msg|
 		var n = msg[0];
-		chimout = ChimaeraOutSCSynth4F(s, n, [\base, \lead]);
+		chimout = ChimaeraOutSCSynth4F(s, n, [\synth_0, \synth_1]);
 		chimin = ChimaeraInTuio2(s, chimconf, chimout);
 		Routine.run({
-			"./instruments4F.sc".load.value(n, \base, \lead);
+			"./instruments4F.sc".load.value(n);
 		}, clock:AppClock);
 	});
 })

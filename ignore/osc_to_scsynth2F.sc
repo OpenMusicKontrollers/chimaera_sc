@@ -19,6 +19,8 @@
 
 s.options.blockSize = 0x10;
 s.options.memSize = 0x10000;
+s.options.numInputBusChannels = 8;
+s.options.numOutputBusChannels = 8;
 s.latency = nil;
 s.boot;
 
@@ -28,9 +30,10 @@ s.doWhenBooted({
 	gidOffset = 100;
 	n = 160;
 
-	s.sendMsg('/g_new', 0+gidOffset, \addToHead.asInt, 0);
-	s.sendMsg('/g_new', 1+gidOffset, \addToHead.asInt, 0);
+	0.to(7).do({|g|
+		s.sendMsg('/g_new', g+gidOffset, \addToHead.asInt, 0);
+	});
 	s.sync;
 
-	"./instruments2F.sc".load.value(n, \base, \lead);
+	"./instruments2F.sc".load.value(n);
 })
