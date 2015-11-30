@@ -27,30 +27,39 @@ ChimaeraGroup {
 	}
 
 	get {|gid|
-		config.sendMsg("/sensors/group/attributes/"++gid, {|msg|
-			var x0 = msg[0];
-			var x1 = msg[1];
-			var no = msg[2].asBoolean;
-			var so = msg[3].asBoolean;
-			var s = msg[4].asBoolean;
-
+		config.sendMsg("/sensors/group/attributes/"++gid++"/min", {|msg|
 			Routine.run({
-				range[gid].lo = x0;
-				range[gid].hi = x1;
-				north[gid].value = no;
-				south[gid].value = so;
-				scale[gid].value = s;
+				range[gid].lo = msg[0];
+			}, clock:AppClock);
+		});
+		config.sendMsg("/sensors/group/attributes/"++gid++"/max", {|msg|
+			Routine.run({
+				range[gid].hi = msg[0];
+			}, clock:AppClock);
+		});
+		config.sendMsg("/sensors/group/attributes/"++gid++"/north", {|msg|
+			Routine.run({
+				north[gid].value = msg[0].asBoolean;
+			}, clock:AppClock);
+		});
+		config.sendMsg("/sensors/group/attributes/"++gid++"/south", {|msg|
+			Routine.run({
+				south[gid].value = msg[0].asBoolean;
+			}, clock:AppClock);
+		});
+		config.sendMsg("/sensors/group/attributes/"++gid++"/scale", {|msg|
+			Routine.run({
+				scale[gid].value = msg[0].asBoolean;
 			}, clock:AppClock);
 		});
 	}
 
 	set {|gid|
-		var x0 = range[gid].lo;
-		var x1 = range[gid].hi;
-		var no = north[gid].value;
-		var so = south[gid].value;
-		var s = scale[gid].value;
-		config.sendMsg("/sensors/group/attributes/"++gid, x0, x1, no, so, s);
+		config.sendMsg("/sensors/group/attributes/"++gid++"/min", range[gid].lo);
+		config.sendMsg("/sensors/group/attributes/"++gid++"/max", range[gid].hi);
+		config.sendMsg("/sensors/group/attributes/"++gid++"/north", north[gid].value);
+		config.sendMsg("/sensors/group/attributes/"++gid++"/south", south[gid].value);
+		config.sendMsg("/sensors/group/attributes/"++gid++"/s", scale[gid].value);
 	}
 
 	init {|s, conf, rx|
