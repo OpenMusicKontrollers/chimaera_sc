@@ -39,7 +39,7 @@
 
 	chimconf.sendMsg("/engines/oscmidi/enabled", true);
 	chimconf.sendMsg("/engines/oscmidi/multi", true);
-	chimconf.sendMsg("/engines/oscmidi/format", "int32");
+	chimconf.sendMsg("/engines/oscmidi/format", "midi");
 	chimconf.sendMsg("/engines/oscmidi/path", "/midi");
 
 	chimconf.sendMsg("/sensors/number", {|msg|
@@ -70,11 +70,12 @@
 		midio.latency = ChimaeraOut.timeToLatency(time);
 
 		msg.removeAt(0); // remove path
-		msg.do({|i| // iterate over all MIDI messages
-			var hiStatus = i & 0xf0; // upper status byte
-			var loStatus = i & 0x0f; // lower status byte (channel)
-			var dat0 = (i & 0x7f00) >> 8; // data byte 0
-			var dat1 = (i & 0x7f0000) >> 16; // data byte 1
+		msg.do({|m| // iterate over all MIDI messages
+			var hiStatus = m[1] & 0xf0; // upper status byte
+			var loStatus = m[1] & 0x0f; // lower status byte (channel)
+			var dat0 = m[2]; // data byte 0
+			var dat1 = m[3]; // data byte 1
+			[hiStatus, loStatus, dat0, dat1].postln;
 			midio.write(3, hiStatus, loStatus, dat0, dat1);
 		});
 	}, "/midi", chimconf.rx);
